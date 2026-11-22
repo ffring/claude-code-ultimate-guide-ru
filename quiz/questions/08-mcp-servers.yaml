@@ -1,0 +1,639 @@
+category: Серверы MCP
+category_id: 8
+source_file: guide/ultimate-guide.md
+questions:
+- id: 08-001
+  difficulty: junior
+  profiles:
+  - junior
+  - senior
+  - power
+  question: Что означает MCP в контексте Claude Code?
+  options:
+    a: Протокол вычислений модели
+    b: Model Context Protocol
+    c: Многоканальная обработка
+    d: Протокол конфигурации модуля
+  correct: b
+  explanation: |-
+    MCP означает Model Context Protocol.
+
+    Это стандарт подключения моделей ИИ к внешним инструментам и источникам данных.
+    MCP позволяет Claude Code выйти за рамки встроенных инструментов, подключаясь к:
+    - Семантический анализ кода (Серена)
+    - Поиск документации (Context7)
+    - Запросы к базе данных (Postgres)
+    - Автоматизация браузера (Playwright)
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.1 Что такое MCP
+    anchor: "#81-what-is-mcp"
+- id: 08-002
+  difficulty: senior
+  profiles:
+  - senior
+  - power
+  question: Какой сервер MCP следует использовать, чтобы найти все случаи использования функции в вашей кодовой базе?
+  options:
+    a: Контекст7
+    b: Последовательное мышление
+    c: Серена
+    d: Постгрес
+  correct: c
+  explanation: |-
+    Serena обеспечивает семантический анализ кода с помощью таких инструментов, как `find_referencing_symbols`.
+
+    Инструменты Serena включают в себя:
+    - `find_symbol` - Поиск функций, классов, методов по имени
+    - `get_symbols_overview` - Получить обзор структуры файла
+    - `find_referencing_symbols` - Найти все варианты использования символа.
+    - `search_for_pattern` - поиск по регулярным выражениям по базе кода.
+
+    Используйте Serena для глубокого понимания кода и анализа на уровне символов.
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.2 Доступные серверы
+    anchor: "#serena-semantic-code-analysis"
+- id: 08-003
+  difficulty: senior
+  profiles:
+  - senior
+  - power
+  question: Какой сервер MCP лучше всего подходит для поиска официальной библиотечной документации?
+  options:
+    a: Серена
+    b: Контекст7
+    c: Последовательное мышление
+    d: мгреп
+  correct: b
+  explanation: |-
+    Context7 предназначен для доступа к официальной библиотечной документации.
+
+    Используйте Context7, когда:
+    - Изучение новых библиотек.
+    - Поиск правильного использования API
+    - Проверка официальных шаблонов
+
+    Например, «Как работает React useEffect?» следует использовать Context7
+    получить официальную документацию, а не общие знания.
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.4 Руководство по выбору сервера
+    anchor: "#server-comparison"
+- id: 08-004
+  difficulty: power
+  profiles:
+  - power
+  question: Какой сервер MCP обеспечивает постоянную память между сеансами?
+  options:
+    a: Контекст7
+    b: Постгрес
+    c: Серена
+    d: Последовательное мышление
+  correct: c
+  explanation: |-
+    Серена обеспечивает память сеанса, которая сохраняется во время разговоров.
+
+    Инструменты памяти Серены:
+    - `write_memory` - Сохранить контекст для будущих сеансов.
+    - `read_memory` - Получить сохраненный контекст
+    - `list_memories` - Список всех сохраненных воспоминаний.
+
+    Память хранится в `.serena/memories/` и сохраняется между сеансами Claude Code.
+    Это имеет решающее значение для поддержания контекста в долгосрочных проектах.
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: Серена (анализ семантического кода)
+    anchor: "#serena-semantic-code-analysis"
+- id: 08-005
+  difficulty: junior
+  profiles:
+  - junior
+  - senior
+  - power
+  question: Где находится глобальный файл конфигурации MCP?
+  options:
+    a: ~/.mcp/config.json
+    b: ~/.claude.json
+    c: /etc/claude/mcp.json
+    d: ~/.config/claude/mcp.json
+  correct: b
+  explanation: |-
+    Глобальная (пользовательская) конфигурация MCP находится в `~/.claude.json` под полем `mcpServers`.
+
+    Расположение конфигурации:
+    - `~/.claude.json` — область действия пользователя (применяется ко всем вашим проектам).
+    - `.mcp.json` в корне проекта - Объем проекта (совместно с командой)
+
+    Claude Code явно НЕ читает пути типа `~/.claude/mcp.json` или `~/.claude/config/mcp.json`. Серверы обычно регистрируются через `claude mcp add`.
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: MCP Расположение конфигурации
+    anchor: "#mcp-configuration-location"
+- id: 08-006
+  difficulty: senior
+  profiles:
+  - senior
+  - power
+  question: Какой сервер MCP рекомендуется использовать для сложных сценариев отладки?
+  options:
+    a: Контекст7
+    b: Серена
+    c: Последовательное мышление
+    d: Постгрес
+  correct: c
+  explanation: |-
+    Последовательное мышление предназначено для многоэтапного анализа с четкими рассуждениями.
+
+    Используйте последовательное мышление для:
+    - Сложные сценарии отладки
+    - Архитектурный анализ
+    - Проектные решения системы.
+
+    Инструмент `sequentialthinking` предоставляет пошаговые рассуждения, которые
+    идеально подходит для проблем, требующих систематического исследования.
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.4 Руководство по выбору сервера
+    anchor: "#decision-tree"
+- id: 08-007
+  difficulty: power
+  profiles:
+  - power
+  question: Как серверы MCP могут эффективно работать вместе?
+  options:
+    a: Они не могут - только один сервер одновременно
+    b: Context7 для шаблонов -> Серена для кода -> Последовательный для анализа -> Playwright для тестирования
+    c: Все серверы должны быть настроены одинаково
+    d: Серверы должны быть расположены в алфавитном порядке.
+  correct: b
+  explanation: |-
+    Серверы MCP можно объединять для более эффективных рабочих процессов:
+
+    1. **Context7** — Получить официальный шаблон для аутентификации.
+    2. **Serena** — найти существующий код авторизации в кодовой базе.
+    3. **Sequential** — Проанализируйте, как интегрировать
+    4. **Playwright** - Тестируем реализацию
+
+    Эта комбинация использует сильные стороны каждого сервера для всестороннего развития.
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.4 Руководство по выбору сервера
+    anchor: "#combining-servers"
+- id: 08-008
+  difficulty: junior
+  profiles:
+  - junior
+  - senior
+  - power
+  question: Какую переменную вы можете использовать в mcp.json для ссылки на текущий путь проекта?
+  options:
+    a: ${projectPath}
+    b: ${CLAUDE_PROJECT_DIR}
+    c: ${cwd}
+    d: ${PROJECT_DIR}
+  correct: b
+  explanation: |-
+    Переменная `${CLAUDE_PROJECT_DIR}` заменяется абсолютным путем к корню проекта и автоматически внедряется в серверные среды MCP стандартного типа.
+
+    Для замены переменных в Claude Code используется стандартный синтаксис оболочки:
+    - `${CLAUDE_PROJECT_DIR}` - Абсолютный путь к корню проекта
+    - `${VAR}` / `${VAR:-default}` — переменная среды с необязательным значением по умолчанию.
+
+    Примечание. `${workspaceFolder}` и `${env:VAR_NAME}` — это соглашения VS Code, которые Claude Code НЕ поддерживает.
+
+    Example:
+    ```json
+    "окр.": {
+      "PROJECT_PATH": "${CLAUDE_PROJECT_DIR}"
+    }
+    ```
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.3 Конфигурация
+    anchor: "#variable-substitution"
+- id: 08-009
+  difficulty: senior
+  profiles:
+  - senior
+  - power
+  question: В чем ключевое преимущество Serena перед встроенными инструментами Claude Code?
+  options:
+    a: Это быстрее
+    b: Он обеспечивает индексацию, которой нет в Claude Code.
+    c: Он использует меньше памяти
+    d: Это работает в автономном режиме
+  correct: b
+  explanation: |-
+    Серена заполняет критический пробел: Claude Code не имеет встроенной индексации (в отличие от Cursor).
+
+    Серена обеспечивает:
+    - **Indexation**: предварительно индексирует вашу кодовую базу для эффективного поиска символов.
+    - **Project Memory**: сохраняет контекст между сеансами.
+    - **Onboarding**: автоматически анализирует структуру проекта при первом запуске.
+
+    Для больших баз кода (> 10 тыс. строк) индексация Serena значительно повышает производительность.
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.2 Доступные серверы
+    anchor: "#serena-semantic-code-analysis"
+- id: 08-010
+  difficulty: power
+  profiles:
+  - power
+  question: Что отличает плагин от сервера MCP в Claude Code?
+  options:
+    a: Плагины работают быстрее
+    b: Плагины связывают рабочие процессы, специфичные для Claude; Серверы MCP добавляют возможности внешних инструментов
+    c: Они идентичны
+    d: Серверы MCP для новичков, плагины для экспертов.
+  correct: b
+  explanation: |-
+    Эмпирическое правило:
+    - **Plugin** = "Как думает Claude" (новые рабочие процессы, специализированные агенты)
+    - **MCP Server** = «Что может Claude» (новые инструменты, внешние системы)
+
+    Плагины объединяют агентов, навыки и настройки в устанавливаемые модули.
+    Серверы MCP добавляют внешние возможности, такие как доступ к базе данных или автоматизация браузера.
+
+    Установка также отличается:
+    - Плагины: `claude plugin install`
+    - MCP: добавить в конфигурацию `settings.json` MCP.
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.5 Система плагинов
+    anchor: "#plugin-vs-mcp-server"
+- id: 08-011
+  difficulty: junior
+  profiles:
+  - junior
+  - senior
+  - power
+  question: Какой сервер MCP используется для автоматизации браузера и тестирования E2E?
+  options:
+    a: Серена
+    b: Контекст7
+    c: Playwright
+    d: Последовательное мышление
+  correct: c
+  explanation: |-
+    Playwright MCP предоставляет возможности автоматизации браузера.
+
+    Инструменты драматурга включают в себя:
+    - `navigate` - Перейти по URL
+    - `click` - Щелчок по элементу
+    - `fill` - Заполнить поле формы
+    - `screenshot` - Сделать скриншот
+
+    Используйте Playwright для:
+    - E2E-тестирование
+    - Визуальная проверка
+    - Отладка браузера
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.2 Доступные серверы
+    anchor: "#playwright-browser-automation"
+- id: 08-012
+  difficulty: senior
+  profiles:
+  - senior
+  - power
+  question: Как добавить сервер MCP с переменными среды через CLI?
+  options:
+    a: claude mcp add --env API_KEY=key server
+    b: claude mcp add -e API_KEY=key my-server -- npx @org/server
+    c: claude mcp install server --api-key key
+    d: claude add mcp server -k key
+  correct: b
+  explanation: |-
+    Используйте флаг `-e` для передачи переменных среды:
+
+    ```баш
+    claude mcp add -e API_KEY=your-key my-server -- npx @org/server
+    ```
+
+    Для нескольких переменных среды:
+    ```баш
+    claude mcp add -e DATABASE_URL=postgres://... -e DEBUG=true postgres -- npx <postgres-mcp-package>
+    ```
+
+    Это быстрее, чем редактировать mcp.json вручную.
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.3 Конфигурация
+    anchor: "#cli-based-mcp-configuration"
+- id: 08-013
+  difficulty: power
+  profiles:
+  - power
+  question: В чем ключевое отличие Грепай от Серены?
+  options:
+    a: Это быстрее
+    b: Он обеспечивает семантический поиск по намерению и анализ графа вызовов.
+    c: Он поддерживает больше языков
+    d: У него лучшая документация
+  correct: b
+  explanation: |-
+    grepai превосходно выполняет поиск на основе намерений с использованием естественного языка, а также предлагает предложения
+    вызовите анализ графа, чтобы отследить зависимости функций:
+
+    ```баш
+    # Семантический поиск (находит код по смыслу, а не по точному тексту)
+    grepai search "поток аутентификации пользователя"
+
+    # Кто вызывает эту функцию?
+    вызывающие трассировку grepai "createSession"
+    ```
+
+    В то время как Серена занимается анализом на уровне символов, grepai находит код с помощью
+    описывает, что он делает, и отслеживает отношения caller/callee.
+
+    Используйте grepai для изучения незнакомых кодовых баз или понимания зависимостей.
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.2 Доступные серверы
+    anchor: "#grepai-recommended-semantic-search"
+- id: 08-014
+  difficulty: senior
+  profiles:
+  - senior
+  - power
+  question: Какая команда выводит список всех установленных плагинов в Claude Code?
+  options:
+    a: claude plugin installed
+    b: claude plugin list
+    c: /plugins-list
+    d: claude list plugins
+  correct: b
+  explanation: |-
+    `claude plugin list` перечисляет установленные вами плагины. `claude plugins` — это псевдоним `claude plugin`, и внутри сеанса `/plugin list` делает то же самое.
+
+    Команды плагина:
+    - `claude plugin list` - Список установленных плагинов
+    - `claude plugin install <name>` - Установить плагин
+    - `claude plugin enable <name>` - Включить плагин
+    - `claude plugin disable <name>` - Отключить плагин
+    - `claude plugin validate <path>` - Проверить манифест плагина.
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.5 Система плагинов
+    anchor: "#plugin-commands"
+- id: 08-015
+  difficulty: intermediate
+  profiles:
+  - senior
+  - power
+  question: В чем главное преимущество использования Figma MCP перед скриншотами?
+  options:
+    a: Более высокое качество изображения
+    b: "В 3–10 раз меньше токенов: структурированные данные и анализ изображений"
+    c: Более высокая скорость загрузки
+    d: Работает оффлайн
+  correct: b
+  explanation: "Figma MCP предоставляет в 3–10 раз меньше токенов, чем снимки экрана, поскольку возвращает структурированные данные (структура React+Tailwind, токены дизайна) вместо того, чтобы требовать анализа изображений. Другие преимущества: прямой доступ к токенам, сопоставление компонентов через Code Connect, итеративный рабочий процесс без новых снимков экрана."
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 4.3 Интеграция Figma MCP
+    anchor: "#figma-mcp-integration"
+- id: 08-016
+  difficulty: senior
+  profiles:
+  - senior
+  - power
+  question: Какой инструмент Figma MCP извлекает токены дизайна (цвета, интервалы, типографика)?
+  options:
+    a: get_design_context
+    b: get_variable_defs
+    c: get_metadata
+    d: get_screenshot
+  correct: b
+  explanation: "`get_variable_defs` извлекает маркеры дизайна, такие как цвета (--color-primary: #3B82F6), интервал (--spacing-md: 16px) и типографика. Рекомендуемый рабочий процесс: get_metadata → get_design_context → get_variable_defs (один раз для каждого проекта) → get_screenshot (только при необходимости визуальной справки)."
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 4.3 Интеграция Figma MCP
+    anchor: "#figma-mcp-integration"
+- id: 08-017
+  difficulty: intermediate
+  profiles:
+  - senior
+  - power
+  question: Какая команда добавляет сервер Figma MCP для удаленного доступа?
+  options:
+    a: claude mcp install figma
+    b: claude mcp add --transport http figma https://mcp.figma.com/mcp
+    c: claude figma connect
+    d: claude mcp import figma
+  correct: b
+  explanation: "Для удаленного MCP (все планы Figma, любая машина): `claude mcp add --transport http figma https://mcp.figma.com/mcp`. Для настольного компьютера MCP (требуется настольное приложение Figma с режимом разработки): `claude mcp add --transport http figma-desktop http://127.0.0.1:3845/mcp`. Официальная Figma MCP была анонсирована в 2025 году."
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 4.3 Интеграция Figma MCP
+    anchor: "#figma-mcp-integration"
+- id: 08-018
+  difficulty: senior
+  profiles:
+  - senior
+  - power
+  question: Каковы два основных примитива архитектуры приложений MCP?
+  options:
+    a: Функции и маршруты
+    b: Команды и события
+    c: Инструменты с метаданными пользовательского интерфейса и ресурсами пользовательского интерфейса (схема ui://)
+    d: Плагины и темы
+  correct: c
+  explanation: |-
+    В приложениях MCP (сентябрь 1865 г.) представлены два основных примитива:
+
+    1. **Инструменты с метаданными пользовательского интерфейса.** — стандартные инструменты MCP, снабженные подсказками по рендерингу (формы ввода, отображения вывода).
+    2. Ресурсы **UI (схема ui://)** — ресурсы, которые возвращают компоненты пользовательского интерфейса вместо данных.
+
+    Вместе они позволяют серверам MCP обеспечивать как функциональность, так и пользовательский интерфейс, обеспечивая более широкое взаимодействие агента с пользователем.
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: Что такое приложения MCP?
+    anchor: "#what-are-mcp-apps"
+- id: 08-019
+  difficulty: senior
+  profiles:
+  - senior
+  - power
+  question: Что контролирует пороговое значение «auto:N» в конфигурации инструмента MCP?
+  options:
+    a: Максимальное количество одновременных подключений MCP
+    b: Размер кэша для результатов инструмента
+    c: Пороговое процентное значение контекста, при котором активируется автоматическая отложенная загрузка (5 %, 10 % или 20 %).
+    d: Максимальное количество инструментов для загрузки на сервер MCP
+  correct: c
+  explanation: |-
+    Параметр `ENABLE_TOOL_SEARCH=auto:N` управляет процентным порогом **контекста**, который запускает отложенную загрузку. Доступные значения:
+
+    - `auto:5` → Агрессивный (порог контекста 5%) - для опытных пользователей с более чем 100 инструментами.
+    - `auto:10` → Default (порог контекста 10%) - сбалансирован для 20-50 инструментов
+    - `auto:20` → Консервативный (порог контекста 20%) - для облегченных настроек с 5-10 инструментами.
+
+    Когда определения инструментов превышают этот процент от общего контекста, Claude Code автоматически активирует отложенную загрузку. Вместо предварительной загрузки всех инструментов он предоставляет инструмент поиска инструментов для обнаружения по требованию, что значительно сокращает использование базового контекста.
+
+    **Example**: chrome-devtools MCP предоставляет 26 инструментов, потребляющих 17 000 токенов. При отложенной загрузке Claude загружает только 3-5 соответствующих инструментов на каждый запрос (около 3 тыс. токенов), сокращение на 91%.
+  doc_reference:
+    file: guide/core/architecture.md
+    section: MCP Поиск инструментов (отложенная загрузка)
+    anchor: "#mcp-tool-search-lazy-loading"
+- id: 08-020
+  difficulty: intermediate
+  profiles:
+  - junior
+  - senior
+  - power
+  question: Какой сервер MCP получил наивысший балл (9.0/10) в оценке производственной экосистемы?
+  options:
+    a: Playwright MCP (8.8/10)
+    b: Контекст7 MCP (8.5/10)
+    c: Semgrep MCP — SAST, секреты и анализ цепочки поставок
+    d: Kubernetes MCP (8.4/10)
+  correct: c
+  explanation: "Semgrep MCP получил оценку 9.0/10 в оценке производственной экосистемы MCP. Он обеспечивает статическое тестирование безопасности приложений (SAST), обнаружение секретов и анализ цепочки поставок. Лучшие оценки: Семгреп (9,0), Playwright (8,8), Context7 (8,5), Kubernetes (8,4). Критерии оценки: надежность, эффективность токена, готовность производства."
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: Экосистема серверов сообщества MCP
+    anchor: "#community-mcp-servers-ecosystem"
+- id: 08-021
+  difficulty: senior
+  profiles:
+  - senior
+  - power
+  question: В чем ключевое различие между официальными серверами `git-mcp` и `github-mcp`?
+  options:
+    a: Git MCP — для Linux; GitHub MCP — для macOS и Windows.
+    b: Git MCP использует OAuth; GitHub MCP использует токены API
+    c: Git MCP — официальный Anthropic (12 локальных инструментов git, без аутентификации); GitHub MCP — официальный GitHub (удаленная платформа, для удаленного режима требуется GitHub Copilot)
+    d: Git MCP работает в CI/CD; GitHub MCP работает только в интерактивном режиме
+  correct: c
+  explanation: |-
+    `git-mcp` это **чиновник Anthropic Git-сервер**: он предоставляет 12 локальных инструментов git (журнал, статус, различия, фиксации и т. д.) без необходимости аутентификации. Он полностью работает в локальном репозитории. `github-mcp` это **чиновник GitHub сервер**: он подключается к пульту GitHub платформе и требует аутентификации. Для удаленного режима (рассылка, создание PR, проблемы) требуется GitHub Copilot подписка. Выбирать `git-mcp` для локальных операций git и `github-mcp` для GitHub интеграция платформы.
+    ---
+  doc_reference:
+    file: guide/diagrams/05-mcp-ecosystem.md
+    section: Официальные серверы
+    anchor: "#official-servers"
+- id: 08-022
+  difficulty: intermediate
+  profiles:
+  - senior
+  - power
+  question: Какие подкоманды CLI позволяют аутентифицировать или деаутентифицировать названный сервер MCP непосредственно с терминала, минуя интерактивное меню /mcp?
+  options:
+    a: claude mcp auth <name>, which always opens a browser and has no headless option
+    b: claude mcp connect <name> --headless, added in the same release as the /mcp menu
+    c: claude mcp login <name> and claude mcp logout <name>, with a --no-browser flag that redirects the OAuth flow through stdin for SSH sessions
+    d: claude mcp auth-refresh <name>, which silently renews tokens without user interaction
+  correct: c
+  explanation: вход claude mcp <name> и выход claude mcp <name> аутентифицируют и деаутентифицируют конкретный сервер MCP прямо из CLI. Оба выпущены в версии 2.1.186. Флаг --no-browser перенаправляет поток OAuth через стандартный ввод вместо открытия вкладки браузера, что важно для сеансов SSH или безголовых контейнеров, где браузер недоступен. Остальные три параметра называют команды, которых нет в Claude Code.
+  doc_reference:
+    file: guide/core/claude-code-releases.md
+    section: v2.1.186
+- id: 08-023
+  difficulty: senior
+  profiles:
+  - senior
+  - power
+  question: Чем управляет переменная среды CLAUDE_CODE_MCP_TOOL_IDLE_TIMEOUT?
+  options:
+    a: Он устанавливает, как долго Claude Code ожидает перед повторной попыткой неудачного подключения к серверу MCP при запуске.
+    b: Он контролирует, как долго удаленный вызов инструмента MCP может зависать без ответа, прежде чем он будет прерван с ошибкой, переопределяя 5-минутное значение по умолчанию.
+    c: Он устанавливает интервал между отправкой уведомлений roots/list_changed на серверы MCP.
+    d: Он контролирует, как долго схемы инструментов остаются в кэше, прежде чем Claude Code повторно получит их с сервера.
+  correct: b
+  explanation: До версии 2.1.187 удаленный вызов инструмента MCP, который никогда не отвечал, мог привести к зависанию сеанса на неопределенный срок. В этом выпуске такие вызовы прерывались с ошибкой после установленного по умолчанию 5-минутного периода простоя, и CLAUDE_CODE_MCP_TOOL_IDLE_TIMEOUT позволяет переопределить это значение по умолчанию. Это не имеет ничего общего с повторными попытками подключения при запуске, интервалами уведомлений о корнях или кэшированием схемы инструмента, которые являются отдельными механизмами.
+  doc_reference:
+    file: guide/core/claude-code-releases.md
+    section: v2.1.187
+- id: 08-024
+  difficulty: power
+  profiles:
+  - senior
+  - power
+  question: Что происходит с версией 2.1.203? Claude Code's MCP roots/list возможность вести себя, когда рабочие каталоги сеанса изменяются в середине сеанса?
+  options:
+    a: Он вычисляется один раз при запуске сеанса и никогда не обновляется, даже если каталоги добавляются позже с помощью --add-dir.
+    b: Он всегда возвращает только один каталог, из которого был запущен Claude Code, игнорируя любые дополнительные рабочие каталоги.
+    c: Требуется, чтобы сервер MCP опрашивал roots/list по таймеру, поскольку Claude Code не отправляет уведомления об изменениях.
+    d: Он отражает текущие дополнительные рабочие каталоги сеанса, и Claude Code отправляет notifications/roots/list_changed всякий раз, когда они изменяются, поэтому серверы могут динамически синхронизироваться.
+  correct: d
+  explanation: В версии 2.1.203 ответ roots/list отражает текущие дополнительные рабочие каталоги сеанса, включая добавленные позже с помощью --add-dir или другого механизма в середине сеанса, а Claude Code теперь отправляет событие notifications/roots/list_changed всякий раз, когда этот набор изменяется. Это позволяет серверу MCP оставаться в соответствии с тем, что сеанс считает областью действия, без опроса. Другие варианты описывают статическую модель или модель на основе опроса, которую заменяет фактическая конструкция push-уведомлений.
+  doc_reference:
+    file: guide/core/claude-code-releases.md
+    section: v2.1.203
+- id: 08-025
+  difficulty: intermediate
+  profiles:
+  - senior
+  - power
+  - pm
+  question: Документированный принцип проектирования MCP предостерегает от использования одного инструмента при каждой отдельной операции API. Что вместо этого должен инкапсулировать хорошо спроектированный инструмент MCP?
+  options:
+    a: Один инструмент на каждую конечную точку API, поэтому агент имеет максимальную гибкость для самостоятельного составления любой последовательности вызовов.
+    b: Как можно больше инструментов на один сервер, чтобы в модели всегда был специализированный инструмент для любой ситуации.
+    c: Инструменты, которые инкапсулируют полное намерение пользователя, например размещение заказа, включая активную скидку, вместо того, чтобы раскрывать отдельные операции API, которые агент должен связать в цепочку.
+    d: Инструменты, которые возвращают необработанные, необработанные ответы API, оставляя всю интерпретацию модели клиента.
+  correct: c
+  explanation: Принципы использования руководства требуют разработки инструментов MCP с учетом полных намерений пользователя, а не отдельных вызовов API. Инструмент, охватывающий одну операцию API, заставляет агента самостоятельно связывать несколько вызовов, и каждый вызов в этой цепочке является независимой точкой отказа. Инструмент, охватывающий полный рабочий процесс, например размещение заказа с уже примененной скидкой, удерживает модель на одном четко определенном пути вместо того, чтобы составлять несколько хрупких шагов. Варианты a, b и d описывают фрагментированный, чрезмерно специализированный или недостаточно обработанный дизайн, против которого выступает принцип.
+  doc_reference:
+    file: guide/ecosystem/mcp-servers-ecosystem.md
+    section: Принципы использования (помимо контрольного списка оценки)
+- id: 08-026
+  difficulty: junior
+  profiles:
+  - junior
+  - senior
+  - power
+  question: Где хранится конфигурация MCP пользовательского уровня?
+  options:
+    a: ~/.mcp/config.json
+    b: ~/.claude.json
+    c: /etc/claude/mcp.json
+    d: ~/.config/claude/mcp.json
+  correct: b
+  explanation: |-
+    Серверы MCP настраиваются в `~/.claude.json` в поле `"mcpServers"`.
+
+    Расположение конфигурации:
+    - `~/.claude.json` (поле `"mcpServers"`) - Область действия User/local
+    - `.mcp.json` в корне проекта - Объем проекта (доступен через VCS)
+
+    В конфигурации указывается, какие серверы запускать и их настройки.
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.3 Конфигурация
+    anchor: "#mcp-configuration-location"
+- id: 08-027
+  difficulty: junior
+  profiles:
+  - junior
+  - senior
+  - power
+  question: Какой синтаксис Claude Code использует для подстановки переменных среды в конфигурации MCP?
+  options:
+    a: ${projectPath}
+    b: ${workspaceFolder}
+    c: ${VAR_NAME}
+    d: ${PROJECT_DIR}
+  correct: c
+  explanation: |-
+    Claude Code использует стандартный синтаксис `${VAR}` в стиле оболочки для расширения переменных среды.
+
+    Подстановка переменных в конфиге MCP:
+    - `${VAR}` - Значение переменной среды
+    - `${VAR:-default}` - переменная среды с резервным вариантом
+
+    Примечание. `${workspaceFolder}` и `${env:VAR_NAME}` — это соглашения VS Code, а не Claude Code.
+
+    Example:
+    ```json
+    "окр.": {
+      "DATABASE_URL": "${DATABASE_URL}"
+    }
+    ```
+  doc_reference:
+    file: guide/ultimate-guide.md
+    section: 8.3 Конфигурация
+    anchor: "#variable-substitution"

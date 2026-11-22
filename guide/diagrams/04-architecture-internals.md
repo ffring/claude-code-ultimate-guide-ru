@@ -1,0 +1,334 @@
+---
+title: "Claude Code: Внутренние схемы архитектуры"
+description: "Агентский цикл, иллюстративные семейства инструментов, контекст запроса, границы субагентов и конвейеры моделей."
+tags: [architecture, internals, master-loop, tools]
+---
+
+# Внутренности архитектуры
+
+Концептуальные диаграммы цикла модели и инструмента, семейства инструментов и границы контекста.
+
+---
+
+### <a name="the-master-loop"></a>Главный цикл
+
+Упрощенный цикл модели и инструмента: Claude запрашивает инструменты, разрешенные операции выполняются, и их результаты возвращаются в диалог. Ходы также могут закончиться из-за ошибок, отмены или ограничений. Независимые операции могут выполняться одновременно; фиксированный предел параллелизма не устанавливается.
+
+```mermaid
+flowchart TD
+    A([User input]) --> B[Prepare request context<br/>Instructions, history, available tools]
+    B --> C{{Model request}}
+    C --> D{Tool calls?}
+    D -->|Yes| PERM{Allowed?}
+    PERM -->|Yes| E[Execute permitted tools]
+    PERM -->|No| DENY[Return denial to conversation]
+    E --> F[Append tool results]
+    DENY --> F
+    F --> C
+    D -->|No| I[Display response]
+    I --> J{Next user action?}
+    J -->|New message| B
+    J -->|Exit| K([Session ends])
+    E -.->|Error, cancellation or limit| STOP[Handle interruption or failure]
+    style A fill:#6DB3F2,color:#222
+    click A href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#1-the-master-loop" "The master loop"
+    style B fill:#6DB3F2,color:#222
+    click B href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#1-the-master-loop" "The master loop"
+    style C fill:#6DB3F2,color:#222
+    click C href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#1-the-master-loop" "The master loop"
+    style D fill:#6DB3F2,color:#222
+    click D href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#1-the-master-loop" "The master loop"
+    style PERM fill:#6DB3F2,color:#222
+    click PERM href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#1-the-master-loop" "The master loop"
+    style E fill:#6DB3F2,color:#222
+    click E href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#1-the-master-loop" "The master loop"
+    style DENY fill:#6DB3F2,color:#222
+    click DENY href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#1-the-master-loop" "The master loop"
+    style F fill:#6DB3F2,color:#222
+    click F href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#1-the-master-loop" "The master loop"
+    style I fill:#6DB3F2,color:#222
+    click I href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#1-the-master-loop" "The master loop"
+    style J fill:#6DB3F2,color:#222
+    click J href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#1-the-master-loop" "The master loop"
+    style K fill:#6DB3F2,color:#222
+    click K href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#1-the-master-loop" "The master loop"
+    style STOP fill:#6DB3F2,color:#222
+    click STOP href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#1-the-master-loop" "The master loop"
+```
+
+<details>
+<summary>ASCII версия</summary>
+
+```
+User input -> request context -> model
+                    ^             |
+                    |        tool calls?
+                    |          Yes -> permissions -> execute or deny -> append result
+                    +-------------------------------------------------------------+
+                               No -> display response -> next message or exit
+Errors, cancellation and limits can interrupt the loop.
+Independent operations may run concurrently.
+```
+
+</details>
+
+> **Источник**: [Главный контур](../core/architecture.md#1-the-master-loop)
+>
+> **Официальная ссылка**: [Документированный агентский цикл](https://code.claude.com/docs/en/how-claude-code-works#the-agentic-loop).
+
+---
+
+### <a name="tool-categories--selection"></a>Категории инструментов и выбор
+
+Эти шесть определенных автором категорий систематизируют примеры из документированного перечня инструментов. Доступность зависит от версии Claude Code, модели, поверхности и конфигурации; это не полный список инструментов или стандартная таксономия из шести категорий.
+
+```mermaid
+flowchart TD
+    ROOT[Illustrative tool families] --> READ[Read and search<br/>Glob, Grep, Read]
+    ROOT --> WRITE[Modify files<br/>Write, Edit, NotebookEdit]
+    ROOT --> EXEC[Execute and delegate<br/>Bash, Agent]
+    ROOT --> WEB[Web access<br/>WebSearch, WebFetch]
+    ROOT --> TRACK[Track tasks when available<br/>TaskCreate, TaskGet,<br/>TaskList, TaskUpdate]
+    ROOT --> CONTROL[Control workflow<br/>EnterPlanMode, ExitPlanMode,<br/>EnterWorktree, ExitWorktree,<br/>AskUserQuestion]
+    style ROOT fill:#6DB3F2,color:#222
+    click ROOT href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#2-the-tool-arsenal" "The tool arsenal"
+    style READ fill:#6DB3F2,color:#222
+    click READ href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#2-the-tool-arsenal" "The tool arsenal"
+    style WRITE fill:#6DB3F2,color:#222
+    click WRITE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#2-the-tool-arsenal" "The tool arsenal"
+    style EXEC fill:#6DB3F2,color:#222
+    click EXEC href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#2-the-tool-arsenal" "The tool arsenal"
+    style WEB fill:#6DB3F2,color:#222
+    click WEB href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#2-the-tool-arsenal" "The tool arsenal"
+    style TRACK fill:#6DB3F2,color:#222
+    click TRACK href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#2-the-tool-arsenal" "The tool arsenal"
+    style CONTROL fill:#6DB3F2,color:#222
+    click CONTROL href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#2-the-tool-arsenal" "The tool arsenal"
+```
+
+<details>
+<summary>ASCII версия</summary>
+
+```
+READ / SEARCH : Glob, Grep, Read
+MODIFY        : Write, Edit, NotebookEdit
+EXECUTE       : Bash, Agent
+WEB           : WebSearch, WebFetch
+TASK TRACKING : TaskCreate, TaskGet, TaskList, TaskUpdate when available
+CONTROL       : EnterPlanMode / ExitPlanMode, EnterWorktree / ExitWorktree,
+                AskUserQuestion
+
+Illustrative families, not a complete or universally available inventory.
+List directories through a shell command; consult the current tools reference.
+```
+
+</details>
+
+> **Источник**: [Арсенал инструментов](../core/architecture.md#2-the-tool-arsenal)
+>
+> **Официальная ссылка**: [Текущие инструменты и доступность](https://code.claude.com/docs/en/tools-reference).
+>
+> TodoWrite — это альтернативный инструмент контрольного списка в поддерживаемых конфигурациях, а не универсально активный инструмент по умолчанию. Агент — текущее имя инструмента субагента; Задача остается псевдонимом в настройках и определениях.
+
+---
+
+### <a name="system-prompt-assembly"></a>Оперативная сборка системы
+
+Эта концептуальная диаграмма запроса группирует стабильные инструкции с изменяющимся контекстом разговора. Он не определяет точный порядок внутренней сборки, точки останова в кэше или время повторного чтения каждого ввода. Файлы инструкций и память могут входить в контекст разговора; Определения MCP могут загружаться по требованию.
+
+```mermaid
+flowchart TD
+    S[System instructions] --> REQ[Model request]
+    T[Available tool definitions<br/>MCP definitions loaded as needed] --> REQ
+    U[User and project instructions<br/>Relevant rules and auto memory] --> CTX[Conversation context]
+    W[Relevant environment and file context] --> CTX
+    H[User messages and tool results] --> CTX
+    CTX --> REQ
+    REQ --> API[Claude API or configured provider]
+    NOTE[Cache reuse depends on stable prefixes<br/>and the provider contract] -.-> API
+    style S fill:#6DB3F2,color:#222
+    click S href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#system-prompt-contents" "System prompt contents"
+    style T fill:#6DB3F2,color:#222
+    click T href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#system-prompt-contents" "System prompt contents"
+    style U fill:#6DB3F2,color:#222
+    click U href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#system-prompt-contents" "System prompt contents"
+    style W fill:#6DB3F2,color:#222
+    click W href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#system-prompt-contents" "System prompt contents"
+    style H fill:#6DB3F2,color:#222
+    click H href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#system-prompt-contents" "System prompt contents"
+    style CTX fill:#6DB3F2,color:#222
+    click CTX href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#system-prompt-contents" "System prompt contents"
+    style REQ fill:#6DB3F2,color:#222
+    click REQ href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#system-prompt-contents" "System prompt contents"
+    style API fill:#6DB3F2,color:#222
+    click API href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#system-prompt-contents" "System prompt contents"
+    style NOTE fill:#6DB3F2,color:#222
+    click NOTE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#system-prompt-contents" "System prompt contents"
+```
+
+<details>
+<summary>ASCII версия</summary>
+
+```
+System instructions --------------------+
+Available / loaded tool definitions -----+--> Model request -> configured provider
+Conversation context --------------------+
+  - relevant instruction files, rules and available memory
+  - environment and file information
+  - messages and tool results
+
+Conceptual grouping; not the literal prompt order or cache layout.
+Cache isolation and reuse follow the provider contract.
+```
+
+</details>
+
+> **Источник**: [Содержимое системной подсказки](../core/architecture.md#system-prompt-contents)
+>
+> **Официальная ссылка**: [Загрузка контекста](https://code.claude.com/docs/en/how-claude-code-works#context-claude-code-adds-on-its-own) и [изоляция кэша](https://platform.claude.com/docs/en/build-with-claude/prompt-caching#cache-storage-and-sharing).
+>
+> Публичные кэши Anthropic API не используются организациями совместно. Изоляция рабочей области также применяется к поставщикам, указанным в документации по кэшированию. Никакое повторное использование частного контента CLAUDE.md между пользователями или организациями не утверждается.
+
+---
+
+### <a name="sub-agent-context-isolation"></a>Изоляция контекста субагента
+
+Изоляция диалога и изоляция файловой системы — это разные границы. Обычный субагент имеет свежий контекст; вилка наследует родительский диалог. Оба возвращают окончательный результат, хотя разрешенные операции могут повлиять на общие файлы или внешние службы.
+
+```mermaid
+flowchart TD
+    P[Parent conversation] --> A{Agent delegation type}
+    A -->|Ordinary subagent| F[Fresh context<br/>Task prompt and agent definition]
+    A -->|Fork| INHERIT[Inherited conversation<br/>Parent prompt, tools and history]
+    F --> S[Subagent tool operations]
+    INHERIT --> S
+    S --> SHARE[Shared checkout or external services<br/>Effects remain visible]
+    S --> WT[Optional isolation: worktree<br/>Separate repository checkout]
+    SHARE --> RESULT[Final result enters parent context]
+    WT --> RESULT
+    RESULT --> P
+    style P fill:#6DB3F2,color:#222
+    click P href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#4-sub-agent-architecture" "Sub-agent architecture"
+    style A fill:#6DB3F2,color:#222
+    click A href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#4-sub-agent-architecture" "Sub-agent architecture"
+    style F fill:#6DB3F2,color:#222
+    click F href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#4-sub-agent-architecture" "Sub-agent architecture"
+    style INHERIT fill:#6DB3F2,color:#222
+    click INHERIT href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#4-sub-agent-architecture" "Sub-agent architecture"
+    style S fill:#6DB3F2,color:#222
+    click S href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#4-sub-agent-architecture" "Sub-agent architecture"
+    style SHARE fill:#6DB3F2,color:#222
+    click SHARE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#4-sub-agent-architecture" "Sub-agent architecture"
+    style WT fill:#6DB3F2,color:#222
+    click WT href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#4-sub-agent-architecture" "Sub-agent architecture"
+    style RESULT fill:#6DB3F2,color:#222
+    click RESULT href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/core/architecture.md#4-sub-agent-architecture" "Sub-agent architecture"
+```
+
+<details>
+<summary>ASCII версия</summary>
+
+```
+Parent -> Agent
+  ordinary -> fresh context with delegated task and definition
+  fork     -> inherited parent conversation and configuration
+       |
+       +-> shared files and external services: permitted effects persist
+       +-> optional worktree: separate checkout for repository edits
+       |
+       +-> final result enters parent context
+
+Intermediate tool calls stay out of parent context.
+A worktree does not isolate external services.
+```
+
+</details>
+
+> **Источник**: [Архитектура субагента](../core/architecture.md#4-sub-agent-architecture)
+>
+> **Официальная ссылка**: [Контекст разветвления и дополнительная изоляция рабочего дерева](https://code.claude.com/docs/en/sub-agents#how-forks-differ-from-other-subagents).
+
+---
+
+### <a name="three-model-pipelines-dense-moe-and-vlm"></a>Три модельных конвейера: плотный, MoE и VLM.
+
+Это концептуальное упрощение. Плотность или смесь экспертов (MoE) описывает, как построены слои, а только текст или язык видения (VLM) описывает, какие входные данные принимает модель. Это разные оси, которые можно комбинировать: модель MoE также может принимать изображения. Anthropic не документирует публично внутреннюю архитектуру Claude, поэтому на диаграммах показаны опубликованные открытые проекты, а не Claude. Таблицу осей см. в разделе [Архитектура, класс размера, модальность и задача](../core/ai-concept-boundaries.md#architecture-size-class-modality-and-task).
+
+```mermaid
+flowchart LR
+    subgraph DENSE["Dense decoder LLM"]
+        D1["Text"] --> D2["Tokenizer"]
+        D2 --> D3["Token embeddings"]
+        D3 --> D4["Stack of transformer layers<br/>attention + feed-forward"]
+        D4 --> D5["Next-token probabilities"]
+        D5 --> D6["Sampled token"]
+        D6 -.->|"appended to input, repeat"| D3
+    end
+    subgraph MOE["MoE variant of the layer"]
+        M1["Token states<br/>after attention"] --> M2["Router<br/>scores N experts per token"]
+        M2 -->|"top-k, Mixtral: 2 of 8"| M3["Selected experts<br/>replace the feed-forward block"]
+        M2 -.->|"not selected"| M4["Idle experts"]
+        M3 --> M5["Weighted sum<br/>by router weights"]
+        M5 --> M6["Layer output"]
+        M7["Note: all experts stored,<br/>only k compute"] -.- M3
+    end
+    subgraph VLM["Vision-language model"]
+        V1["Image"] --> V2["Vision encoder"]
+        V2 --> V3["Projection into the<br/>LLM embedding space"]
+        V4["Text tokens<br/>embedded"] --> V5["Merged sequence"]
+        V3 --> V5
+        V5 --> V6["Language model<br/>dense or MoE"]
+        V6 --> V7["Text output"]
+    end
+    style D1 fill:#6DB3F2,color:#222
+    style D2 fill:#6DB3F2,color:#222
+    style D3 fill:#6DB3F2,color:#222
+    style D4 fill:#6DB3F2,color:#222
+    style D5 fill:#6DB3F2,color:#222
+    style D6 fill:#6DB3F2,color:#222
+    style M1 fill:#6DB3F2,color:#222
+    style M2 fill:#6DB3F2,color:#222
+    style M3 fill:#6DB3F2,color:#222
+    style M4 fill:#6DB3F2,color:#222
+    style M5 fill:#6DB3F2,color:#222
+    style M6 fill:#6DB3F2,color:#222
+    style M7 fill:#6DB3F2,color:#222
+    style V1 fill:#6DB3F2,color:#222
+    style V2 fill:#6DB3F2,color:#222
+    style V3 fill:#6DB3F2,color:#222
+    style V4 fill:#6DB3F2,color:#222
+    style V5 fill:#6DB3F2,color:#222
+    style V6 fill:#6DB3F2,color:#222
+    style V7 fill:#6DB3F2,color:#222
+```
+
+<details>
+<summary>ASCII версия</summary>
+
+```
+Dense : text -> tokenizer -> token embeddings
+        -> stack of transformer layers (attention + feed-forward)
+        -> next-token probabilities -> sampled token
+        -> appended to input, repeat
+
+MoE variant of the layer:
+        token states after attention -> router (scores N experts per token)
+        -> top-k, Mixtral: 2 of 8 -> selected experts
+           (replace the feed-forward block) -> weighted sum by router
+           weights -> layer output
+        not selected -> idle experts
+        Note: all experts stored, only k compute.
+
+VLM   : image -> vision encoder -> projection into the LLM embedding space
+        text tokens embedded ----------------------------+
+        projected image + embedded text -> merged sequence
+        -> language model (dense or MoE) -> text output
+```
+
+</details>
+
+> **Источник**: [Архитектура, размерный класс, модальность и задача](../core/ai-concept-boundaries.md#architecture-size-class-modality-and-task)
+
+> Эксперты — это не целые подмодели: они располагаются внутри каждого слоя вместо блока прямой связи.
+>
+> Источники: технический отчет [Phi-3](https://ar5iv.labs.arxiv.org/html/2404.14219) (архитектура преобразователя-декодера), глоссарий [Anthropic](https://platform.claude.com/docs/en/about-claude/glossary) (модель авторегрессионного языка), [Attention Is All You Need](https://ar5iv.labs.arxiv.org/html/1706.03762) (оригинальный преобразователь, кодировщик-декодер), [Mixtral of Experts](https://arxiv.org/html/2401.04088), [Переключающие трансформаторы](https://ar5iv.labs.arxiv.org/html/2101.03961), [LLaVA](https://ar5iv.labs.arxiv.org/html/2304.08485), [Claude видение документов](https://platform.claude.com/docs/en/build-with-claude/vision) (изображения потребляют токены).

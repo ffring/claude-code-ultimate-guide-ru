@@ -1,0 +1,2366 @@
+{
+  "$schema": "./ai-design-patterns.schema.json",
+  "version": "1.0.0",
+  "last_verified": "2026-10-27",
+  "last_updated": "2026-10-28",
+  "guide_page": "guide/core/ai-design-patterns.md",
+  "site_path": "/ai-design-patterns/",
+  "purpose": "Переход между классическими шаблонами проектирования программного обеспечения и шаблонами использования агентов, закрепленными в документированных механизмах Claude Code. Подает страницу руководства, целевую страницу и ресурс MCP claude-code-guide://ai-design-patterns.",
+  "method": "Строка перехода появляется только тогда, когда хотя бы один общедоступный источник сопоставляет классический шаблон с аналогом агента, существует документированный механизм Claude Code и может быть указан режим отказа. Механизмы Claude Code проверяются по официальной документации https://code.claude.com/docs/llms-full.txt. Строки, помеченные как собственный синтез, представляют собой сопоставление этого руководства с Claude Code: в источниках приводится только аналог общего агента.",
+  "families": [
+    {
+      "id": "gof-creational",
+      "label": "GoF творческий"
+    },
+    {
+      "id": "gof-structural",
+      "label": "структурный"
+    },
+    {
+      "id": "gof-behavioral",
+      "label": "поведенческий"
+    },
+    {
+      "id": "eip",
+      "label": "Корпоративная интеграция"
+    },
+    {
+      "id": "distributed",
+      "label": "Распределенность и устойчивость"
+    }
+  ],
+  "crosswalk": [
+    {
+      "id": "factory-method",
+      "classic": "Фабричный метод",
+      "family": "gof-creational",
+      "classic_intent": "Позвольте создателю решить, какой конкретный продукт создать, используя общий интерфейс.",
+      "agent_analogue": [
+        {
+          "label": "Создание субагента из именованного определения",
+          "sources": [
+            "agentpatterns-ai",
+            "aicodingpatterns"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Subagent definitions and the Agent tool",
+          "doc": "https://code.claude.com/docs/en/sub-agents"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "own-synthesis",
+      "failure_mode": "Фабрика передает каждому продукту полный набор инструментов: определение субагента без поля инструментов наследует все инструменты, доступные субагентам.",
+      "verify": "Перечислите поле инструментов каждого определения в .claude/agents/ и не выполните проверку, если у агента с возможностью записи нет явного списка разрешений.",
+      "sources": [
+        "agentpatterns-ai",
+        "aicodingpatterns",
+        "claude-docs-sub-agents"
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/factory-method.webp",
+        "alt": "Карточка заводского метода (творение GoF). Классика: Создатель решает, какой продукт создавать. В Claude Code: определения субагентов и инструмент агента. Нарушается, когда: Определение без поля инструментов наследует все инструменты. Проверьте: дайте каждому агенту с возможностью записи явный список разрешенных инструментов."
+      }
+    },
+    {
+      "id": "singleton",
+      "classic": "Синглтон",
+      "family": "gof-creational",
+      "classic_intent": "Гарантируйте один общий экземпляр компонента с глобальной точкой доступа.",
+      "agent_analogue": [
+        {
+          "label": "Общий реестр инструментов",
+          "sources": [
+            "aicodingpatterns"
+          ]
+        },
+        {
+          "label": "Управление многоуровневой памятью: решите, какое состояние является общим, изолированным, постоянным или эфемерным.",
+          "sources": [
+            "kage-ai"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "CLAUDE.md hierarchy and auto memory (shared state, not a Singleton)",
+          "doc": "https://code.claude.com/docs/en/memory"
+        }
+      ],
+      "consensus": "divergent",
+      "provenance": "own-synthesis",
+      "failure_mode": "Claude Code здесь не обеспечивает Singleton: несколько CLAUDE.md и файлов памяти загружаются и объединяются, и ничто не требует использования одного экземпляра или одной точки доступа. Что сохраняется, так это риск неуправляемого общего состояния: параллельные сеансы или агенты, которые одновременно записывают один и тот же файл памяти, могут перезаписывать записи друг друга.",
+      "verify": "Запустите два сеанса, оба из которых добавляются в один и тот же файл памяти, и проверьте, не потеряна ли какая-либо запись.",
+      "sources": [
+        "aicodingpatterns",
+        "kage-ai",
+        "claude-docs-memory"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Системы памяти: собственный стек памяти Claude Code",
+          "path": "guide/core/memory-systems.md#2-native-claude-code-memory-stack"
+        },
+        {
+          "kind": "article",
+          "title": "Постоянная память: шесть ошибок, которые никогда не приводят к ошибке",
+          "url": "https://www.florian.bruniaux.com/guides/persistent-memory-silent-failures/"
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/singleton.webp",
+        "alt": "Карточка Singleton (создание GoF). Классический: один общий экземпляр с одной глобальной точкой доступа. В Claude Code: иерархия CLAUDE.md и автопамять. Перерыв, когда: Параллельные записи в один файл памяти перезаписывают друг друга. Проверка: добавьте данные из двух сеансов одновременно и найдите потерянные записи."
+      }
+    },
+    {
+      "id": "adapter",
+      "classic": "Адаптер",
+      "family": "gof-structural",
+      "classic_intent": "Преобразуйте интерфейс существующего компонента в интерфейс, ожидаемый клиентом.",
+      "agent_analogue": [
+        {
+          "label": "Адаптер инструмента, который отображает внешнюю систему в модели",
+          "sources": [
+            "aicodingpatterns",
+            "apc"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "MCP servers",
+          "doc": "https://code.claude.com/docs/en/mcp"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "own-synthesis",
+      "failure_mode": "Адаптер отражает каждую конечную точку восходящего потока, поэтому определения инструментов заполняют контекст, и модель выбирает среди почти повторяющихся инструментов.",
+      "verify": "Запустите /mcp и /context, затем удалите или отложите инструменты, которые не использовались ни одной задачей в последнем спринте.",
+      "sources": [
+        "aicodingpatterns",
+        "apc",
+        "claude-docs-mcp"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Экосистема серверов MCP",
+          "path": "guide/ecosystem/mcp-servers-ecosystem.md"
+        },
+        {
+          "kind": "article",
+          "title": "Серверы MCP: сколько они на самом деле стоят и когда их использовать",
+          "url": "https://www.florian.bruniaux.com/guides/mcp-servers-token-cost/"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-pjothbhlbao",
+          "t": 1262,
+          "point": "The speakers explain that each vendor exposes its own APIs through an MCP server layer, a unified wrapper the LLM can use."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/adapter.webp",
+        "alt": "Карта адаптера (структурная GoF). Классический: преобразуйте один интерфейс в тот, который ожидает клиент. В Claude Code: серверы MCP. Срывы, когда: Зеркальное отображение каждой конечной точки перегружает контекст почти дублирующими инструментами. Проверьте: запустите /mcp и /context, затем отложите инструменты, которые никто не использовал."
+      }
+    },
+    {
+      "id": "composite",
+      "classic": "Композитный",
+      "family": "gof-structural",
+      "classic_intent": "Обрабатывайте один объект и дерево объектов через один и тот же интерфейс.",
+      "agent_analogue": [
+        {
+          "label": "Агент, который делегирует полномочия агентам, которые могут делегировать снова",
+          "sources": [
+            "agentpatterns-ai",
+            "aicodingpatterns"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Nested subagents (spawn depth)",
+          "doc": "https://code.claude.com/docs/en/sub-agents"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "own-synthesis",
+      "failure_mode": "Рекурсия без бюджета: каждый уровень увеличивает использование токенов. Колпачки Claude Code вложены в CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH, которые можно регулировать, но нельзя снимать.",
+      "verify": "Установите CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH явно для автоматического запуска и регистрации порожденных субагентов с помощью перехватчика SubagentStop.",
+      "sources": [
+        "agentpatterns-ai",
+        "aicodingpatterns",
+        "claude-docs-env-vars"
+      ],
+      "videos": [
+        {
+          "source": "yt-srfxsjegc6q",
+          "t": 6741,
+          "point": "The speakers show an agent in a sequence that is itself a loop of two agents, so a workflow is used like a single sub agent."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/composite.webp",
+        "alt": "Составная карта (структурная GoF). Классика: относитесь одинаково к одному объекту и дереву объектов. В Claude Code: вложенные субагенты, ограниченные глубиной появления. Перерыв, когда: Каждый уровень вложенности увеличивает использование токена. Проверка: явно задайте глубину появления и регистрируйте каждый созданный субагент."
+      }
+    },
+    {
+      "id": "decorator",
+      "classic": "Декоратор",
+      "family": "gof-structural",
+      "classic_intent": "Добавьте поведение к объекту, обернув его, не меняя его класс.",
+      "agent_analogue": [
+        {
+          "label": "Ограждение вокруг звонка модели",
+          "sources": [
+            "aicodingpatterns"
+          ]
+        },
+        {
+          "label": "Промежуточное ПО для внедрения контекста, которое обогащает каждый запрос",
+          "sources": [
+            "agentpatterns-ai"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "UserPromptSubmit and PostToolUse hooks",
+          "doc": "https://code.claude.com/docs/en/hooks"
+        }
+      ],
+      "consensus": "divergent",
+      "provenance": "own-synthesis",
+      "failure_mode": "Классический стек декораторов имеет фиксированный порядок. Соответствующие перехватчики выполняются параллельно, поэтому оболочка, предполагающая, что другая оболочка уже запущена, является гонкой.",
+      "verify": "Напишите каждый хук так, чтобы он проходил при запуске в одиночку, и протестируйте его с отключенными другими хуками.",
+      "sources": [
+        "aicodingpatterns",
+        "agentpatterns-ai",
+        "claude-docs-hooks"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Справочник по событиям перехватчиков",
+          "path": "guide/core/hooks-events-reference.md"
+        },
+        {
+          "kind": "guide",
+          "title": "Маршрутизация Smart-Suggest: перехватчик UserPromptSubmit, который добавляет кандидатов с навыками в подсказку.",
+          "path": "guide/workflows/smart-suggest-routing.md#claude-code-architecture"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-sw3plfxfwj4",
+          "t": 703,
+          "point": "The speaker explains Spring AI advisors as a filter or pre-processor that wraps calls to and from the model and can mutate or log each request."
+        },
+        {
+          "source": "yt-tqc1qofivcq",
+          "t": 6430,
+          "point": "An Anthropic speaker says hooks fire as events in the Agent SDK and are used for deterministic verification or for inserting context."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/decorator.webp",
+        "alt": "Карточка декоратора (структурная GoF). Классика: добавьте поведение путем переноса в фиксированном порядке. В Claude Code: хуки UserPromptSubmit и PostToolUse. Разрыв, когда: Соответствующие перехватчики выполняются параллельно, поэтому фиксированного порядка нет. Проверка: Пропустите каждый крюк, когда он движется один."
+      }
+    },
+    {
+      "id": "facade",
+      "classic": "Фасад",
+      "family": "gof-structural",
+      "classic_intent": "Предложите одну простую точку входа перед сложной подсистемой.",
+      "agent_analogue": [
+        {
+          "label": "Файл инструкций проекта как единая точка входа для соглашений",
+          "sources": [
+            "agentpatterns-ai"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "CLAUDE.md",
+          "doc": "https://code.claude.com/docs/en/memory"
+        }
+      ],
+      "consensus": "single-source",
+      "provenance": "third-party",
+      "failure_mode": "Фасад читается как контракт. В документах указано, что Claude рассматривает CLAUDE.md как контекст, а не как обязательную конфигурацию: написанное там правило является запросом, а не гарантией.",
+      "verify": "Для каждого правила «никогда нельзя» в CLAUDE.md добавьте перехватчик PreToolUse или правило запрета и тест, который его запускает.",
+      "sources": [
+        "agentpatterns-ai",
+        "claude-docs-memory"
+      ],
+      "related": [
+        {
+          "kind": "article",
+          "title": "Ваш CLAUDE.md слишком длинный.",
+          "url": "https://www.florian.bruniaux.com/blog/articles/your-claudemd-is-too-long/"
+        },
+        {
+          "kind": "project",
+          "title": "ctxharness: проверяет, что утверждения в CLAUDE.md и правила по-прежнему соответствуют проекту.",
+          "url": "https://github.com/FlorianBruniaux/ctxharness"
+        },
+        {
+          "kind": "guide",
+          "title": "Инструкции команды ИИ",
+          "path": "guide/workflows/team-ai-instructions.md"
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/facade.webp",
+        "alt": "Фасадная карта (структурная GoF). Классика: одна простая точка входа в сложную подсистему. В Claude Code: CLAUDE.md. Нарушается, когда: CLAUDE.md является контекстом, а не принудительной конфигурацией. Проверка: подкрепите каждое правило «никогда нельзя» ловушкой или правилом запрета."
+      }
+    },
+    {
+      "id": "chain-of-responsibility",
+      "classic": "Цепочка ответственности",
+      "family": "gof-behavioral",
+      "classic_intent": "Передавайте запрос по цепочке обработчиков, пока один из них его не обработает.",
+      "agent_analogue": [
+        {
+          "label": "Перехватчик или конвейер разрешений перед вызовами инструментов",
+          "sources": [
+            "agentpatterns-ai",
+            "ahep"
+          ]
+        },
+        {
+          "label": "Агенты объединены в цепочку, поэтому каждый обрабатывает то, что может, а остальное передает.",
+          "sources": [
+            "aicodingpatterns"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Permission rules: deny, then ask, then allow",
+          "doc": "https://code.claude.com/docs/en/permissions"
+        }
+      ],
+      "consensus": "divergent",
+      "provenance": "own-synthesis",
+      "failure_mode": "Команды ожидают принятия решения о порядке объявления или специфике правил. В документах говорится, что правила оцениваются как «отказ», затем «спрос» и «разрешение», и специфичность не меняет этот порядок: широкий запрет превосходит узкий «разрешение».",
+      "verify": "Добавьте запрет и более конкретное разрешение для одной и той же команды в тестовом проекте и убедитесь, что команда остается заблокированной.",
+      "sources": [
+        "agentpatterns-ai",
+        "ahep",
+        "aicodingpatterns",
+        "claude-docs-permissions"
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/chain-of-responsibility.webp",
+        "alt": "Карта цепочки ответственности (поведенческая модель GoF). Классика: передача запроса по обработчикам до тех пор, пока один из них не обработает его. В Claude Code: Правила разрешений: запретить, затем спросить, затем разрешить. Нарушается, когда: Специфика не побеждает: широкое запрещение побеждает узкое разрешение. Проверка: добавьте запрет и более узкое разрешение, подтвердите, что команда остается заблокированной."
+      }
+    },
+    {
+      "id": "command",
+      "classic": "Команда",
+      "family": "gof-behavioral",
+      "classic_intent": "Превратите запрос в объект, который можно поставить в очередь, записать в журнал, проверить или отменить.",
+      "agent_analogue": [
+        {
+          "label": "Вызов инструмента: именованное действие со структурированными аргументами.",
+          "sources": [
+            "aicodingpatterns",
+            "ahep"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Tool calls and PreToolUse hooks",
+          "doc": "https://code.claude.com/docs/en/tools-reference"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "own-synthesis",
+      "failure_mode": "Объект команды записывается моделью. Без проверки перед отправкой неправильно сформированный аргумент или аргумент, выходящий за рамки области видимости, выполняется так, как написано.",
+      "verify": "Подайте PreToolUse перехват записанного ввода инструмента с путем за пределами области видимости и подтвердите, что он блокируется.",
+      "sources": [
+        "aicodingpatterns",
+        "ahep",
+        "claude-docs-tools-reference",
+        "claude-docs-hooks"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Справочник по событиям перехватчиков",
+          "path": "guide/core/hooks-events-reference.md"
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/command.webp",
+        "alt": "Командная карта (поведенческая GoF). Классика: превратите запрос в объект, который можно поставить в очередь, зарегистрировать или проверить. В Claude Code: вызовы инструментов и перехваты PreToolUse. Перерыв, когда: модель записывает аргументы, и если они не отмечены, они выполняются так, как написано. Проверка: Воспроизведите входные данные инструмента, выходящие за рамки области видимости, и подтвердите, что перехватчик блокирует их."
+      }
+    },
+    {
+      "id": "mediator",
+      "classic": "Посредник",
+      "family": "gof-behavioral",
+      "classic_intent": "Централизуйте взаимодействие набора компонентов, чтобы они не ссылались друг на друга напрямую.",
+      "agent_analogue": [
+        {
+          "label": "Оркестратор, координирующий работников, которые никогда не разговаривают друг с другом",
+          "sources": [
+            "aicodingpatterns",
+            "sarkar-2025"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Main conversation coordinating subagents",
+          "doc": "https://code.claude.com/docs/en/sub-agents"
+        },
+        {
+          "name": "Agent teams (experimental, off by default; peer messaging, the non-mediated alternative)",
+          "doc": "https://code.claude.com/docs/en/agent-teams"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "own-synthesis",
+      "failure_mode": "Топология не применяется, и посредник может стать узким местом. Субагент, инструменты которого включают SendMessage, может отправлять сообщения другим именованным агентам напрямую, без участия команд агентов. А если работники возвращают стенограммы вместо резюме, контекст координации заполняется материалом, который он больше никогда не читает.",
+      "verify": "Исключите SendMessage из инструментов работника, когда весь трафик должен проходить через координатора, запрашивайте у каждого субагента ограниченный окончательный отчет и сравнивайте /context до и после делегирования.",
+      "sources": [
+        "aicodingpatterns",
+        "sarkar-2025",
+        "claude-docs-sub-agents",
+        "claude-docs-agent-teams"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Команды агентов",
+          "path": "guide/workflows/agent-teams.md"
+        },
+        {
+          "kind": "guide",
+          "title": "Межсессионный обмен сообщениями: одноранговые сообщения без посредника",
+          "path": "guide/workflows/cross-session-messaging.md"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-2czyyrtzilg",
+          "t": 529,
+          "point": "In orchestration, every call goes through the orchestrator and agents never call each other."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/mediator.webp",
+        "alt": "Карта Медиатора (поведенческая GoF). Классика: компоненты общаются через одного координатора. В Claude Code: Основной диалог, координирующий субагентов. Перерывы, когда: работники возвращают стенограммы и заполоняют контекст координатора. Проверка: попросите каждого субагента предоставить ограниченный окончательный отчет."
+      }
+    },
+    {
+      "id": "memento",
+      "classic": "сувенир",
+      "family": "gof-behavioral",
+      "classic_intent": "Зафиксируйте состояние объекта, чтобы его можно было восстановить позже, не раскрывая его внутренние компоненты.",
+      "agent_analogue": [
+        {
+          "label": "Контрольная точка и перемотка состояния агента",
+          "sources": [
+            "agentpatterns-ai",
+            "ahep"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Checkpointing and /rewind",
+          "doc": "https://code.claude.com/docs/en/checkpointing"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "own-synthesis",
+      "failure_mode": "Снимок частичный. В документах указано, что контрольные точки отслеживают только изменения, внесенные с помощью инструментов редактирования файлов Claude; Команды Bash и внешние процессы не фиксируются, как и изменения, внесенные фоновым субагентом.",
+      "verify": "Используйте команду Bash, чтобы изменить файл, который Claude не редактировал в этом сеансе, перемотайте назад и подтвердите, что изменение сохранилось. Выполняйте коммит с помощью git перед рискованной работой с оболочкой или делегированным редактированием.",
+      "sources": [
+        "agentpatterns-ai",
+        "ahep",
+        "claude-docs-checkpointing"
+      ],
+      "videos": [
+        {
+          "source": "yt-bzissg7h7da",
+          "t": 14,
+          "point": "The speaker argues agents need a save button: runtime checkpoints that let you replay, diff and decide, instead of read-only traces."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/memento.webp",
+        "alt": "Памятная карточка (поведенческая GoF). Классика: сделайте снимок состояния и восстановите его позже. В Claude Code: Контрольные точки и /rewind. Перерывы, когда: отслеживаются только изменения файлов Claude, а не Bash или внешние изменения. Проверка: отредактируйте файл с помощью Bash, перемотайте назад, и изменения все еще существуют."
+      }
+    },
+    {
+      "id": "observer",
+      "classic": "наблюдатель",
+      "family": "gof-behavioral",
+      "classic_intent": "Автоматически уведомляйте подписчиков, когда субъект меняет состояние.",
+      "agent_analogue": [
+        {
+          "label": "Перехватчики жизненного цикла, реагирующие на события агента",
+          "sources": [
+            "agentpatterns-ai",
+            "aicodingpatterns"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Hooks (PreToolUse, PostToolUse, Stop, SubagentStop)",
+          "doc": "https://code.claude.com/docs/en/hooks"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "third-party",
+      "failure_mode": "Подписчики принимают заказ. В документах указано, что соответствующие перехватчики выполняются параллельно, что Claude Code объединяет их выходные данные после того, как все они завершатся, и что для решений о разрешении применяется наиболее ограничительный результат: запрет одного перехватчика не останавливает побочные эффекты родственного перехватчика.",
+      "verify": "Запустите каждый перехватчик отдельно для записанных полезных данных события; хук, который проходит только после другого, не является наблюдателем.",
+      "sources": [
+        "agentpatterns-ai",
+        "aicodingpatterns",
+        "kage-ai",
+        "claude-docs-hooks",
+        "claude-docs-hooks-guide"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Справочник по событиям перехватчиков",
+          "path": "guide/core/hooks-events-reference.md"
+        },
+        {
+          "kind": "article",
+          "title": "Claude Code под капотом",
+          "url": "https://www.florian.bruniaux.com/blog/articles/claude-code-under-the-hood/"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-msfmqw92y8q",
+          "t": 44,
+          "point": "The speaker defines hooks as actions guaranteed to fire on agent events, such as just before a file read or when the conversation stops."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/observer.webp",
+        "alt": "Карта наблюдателя (поведенческая GoF). Классический вариант: подписчики получают уведомление при изменении состояния. В Claude Code: перехватчики PreToolUse, PostToolUse, Stop и SubagentStop. Разрывы, когда: перехватчики, которые принимают порядок, в то время как соответствующие перехватчики выполняются параллельно. Проверка: Запустите каждый перехватчик отдельно для записанного события."
+      }
+    },
+    {
+      "id": "strategy",
+      "classic": "Стратегия",
+      "family": "gof-behavioral",
+      "classic_intent": "Замените один алгоритм на другой за тем же интерфейсом во время выполнения.",
+      "agent_analogue": [
+        {
+          "label": "Модель или подход, выбранный для каждой задачи",
+          "sources": [
+            "agentpatterns-ai",
+            "aicodingpatterns"
+          ]
+        },
+        {
+          "label": "Переключение стратегии во время выполнения с записью причин, какой ценой и способа отката",
+          "sources": [
+            "kage-ai"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "model field per subagent and /model",
+          "doc": "https://code.claude.com/docs/en/model-config"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "own-synthesis",
+      "failure_mode": "Стратегия меняется незаметно. Никто впоследствии не сможет сказать, какая модель дала какой результат и сколько стоило переключение.",
+      "verify": "Закрепите модель в определении каждого субагента и проверьте /usage или стенограмму сеанса после запуска.",
+      "sources": [
+        "agentpatterns-ai",
+        "aicodingpatterns",
+        "kage-ai",
+        "claude-docs-model-config",
+        "claude-docs-sub-agents"
+      ],
+      "related": [
+        {
+          "kind": "project",
+          "title": "Agent-router-core: экспериментальная детерминированная маршрутизация CLI для рабочих процессов агента.",
+          "url": "https://github.com/FlorianBruniaux/agent-router-core"
+        },
+        {
+          "kind": "project",
+          "title": "cc-copilot-bridge: маршрутизация между несколькими провайдерами для Claude Code",
+          "url": "https://ccbridge.bruniaux.com/"
+        },
+        {
+          "kind": "article",
+          "title": "Измерение собственного использования ИИ: три метра, три разных ответа",
+          "url": "https://www.florian.bruniaux.com/blog/articles/real-cost-of-ai-measuring-your-own-usage/"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-fvxy8opoi8o",
+          "t": 106,
+          "point": "The speaker argues that one model for every task is overkill and that routing each task to a fitting model cuts cost and risk."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/strategy.webp",
+        "alt": "Стратегическая карта (поведенческая GoF). Классика: поменяйте алгоритм в одном интерфейсе. В Claude Code: поле модели для каждого субагента и /model. Ломается, когда: Модель переключается автоматически, без записи стоимости или происхождения. Проверка: закрепите модель для каждого субагента и просмотрите /usage после запуска."
+      }
+    },
+    {
+      "id": "template-method",
+      "classic": "Шаблонный метод",
+      "family": "gof-behavioral",
+      "classic_intent": "Исправьте скелет алгоритма и позвольте подклассам выполнять некоторые шаги.",
+      "agent_analogue": [
+        {
+          "label": "Системная подсказка, определяющая шаги",
+          "sources": [
+            "aicodingpatterns"
+          ]
+        },
+        {
+          "label": "Исправлен скелет цикла агента с подключаемыми шагами.",
+          "sources": [
+            "ahep"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Skills that define a procedure",
+          "doc": "https://code.claude.com/docs/en/skills"
+        },
+        {
+          "name": "Stop hook as the final step check",
+          "doc": "https://code.claude.com/docs/en/hooks"
+        }
+      ],
+      "consensus": "divergent",
+      "provenance": "own-synthesis",
+      "failure_mode": "Прозаический скелет не применяется: модель может пропустить или изменить порядок шагов, в отличие от базового класса, который сам вызывает шаги.",
+      "verify": "Дайте последнему шагу артефакт (файл, тестовый запуск) и заблокируйте завершение с помощью перехватчика Stop, если артефакт отсутствует.",
+      "sources": [
+        "aicodingpatterns",
+        "ahep",
+        "claude-docs-skills",
+        "claude-docs-hooks"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Шаблоны проектирования навыков",
+          "path": "guide/core/skill-design-patterns.md"
+        },
+        {
+          "kind": "guide",
+          "title": "TDD с Claude",
+          "path": "guide/workflows/tdd-with-claude.md"
+        },
+        {
+          "kind": "article",
+          "title": "TDD с Claude Code",
+          "url": "https://www.florian.bruniaux.com/guides/tdd-with-claude-code/"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-nmwgxvm-to",
+          "t": 421,
+          "point": "The speaker describes Stripe's blueprints: agent skills interwoven with deterministic code in a fixed workflow."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/template-method.webp",
+        "alt": "Карточка шаблонного метода (поведенческая модель GoF). Классика: фиксированный скелет управляет шагами. В Claude Code: навыки, определяющие процедуру, плюс ловушка Stop. Перерывы, когда: скелет прозы не применяется, поэтому шаги пропускаются. Проверка: заблокируйте завершение с помощью ловушки Stop, если артефакт отсутствует."
+      }
+    },
+    {
+      "id": "pipes-and-filters",
+      "classic": "Трубы и фильтры",
+      "family": "eip",
+      "classic_intent": "Обработайте сообщение посредством последовательности независимых шагов, связанных каналами.",
+      "agent_analogue": [
+        {
+          "label": "Конвейер, в котором каждый вызов агента или модели является фильтром.",
+          "sources": [
+            "roanbrasil",
+            "apc"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Print mode in a shell pipeline (claude -p)",
+          "doc": "https://code.claude.com/docs/en/headless"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "own-synthesis",
+      "failure_mode": "Фильтр выдает произвольный текст, который следующий фильтр неправильно считывает, и ошибка распространяется по каналу.",
+      "verify": "Используйте --output-format json между шагами и проверяйте форму перед запуском следующего фильтра.",
+      "sources": [
+        "roanbrasil",
+        "apc",
+        "hohpe-eip",
+        "claude-docs-headless",
+        "claude-docs-cli-reference"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Рабочие процессы GitHub Actions",
+          "path": "guide/workflows/github-actions.md"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-sw3plfxfwj4",
+          "t": 2291,
+          "point": "The speaker pipes git log into claude -p to generate release notes and calls it pipes and filters all over again."
+        },
+        {
+          "source": "yt-x9bai7rbhqk",
+          "t": 491,
+          "point": "The speakers present the sequence pattern, calling one agent after another, also known as prompt chaining."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/pipes-and-filters.webp",
+        "alt": "Карточка «Трубы и фильтры» (интеграция Enterprise). Классика: Ступени, соединенные каналами, одна за другой. В Claude Code: claude -p в конвейере оболочки. Разрывы, когда: свободный текст на одном этапе неправильно читается на следующем. Проверка: используйте выходные данные JSON и проверяйте их между шагами."
+      }
+    },
+    {
+      "id": "content-based-router",
+      "classic": "Контентно-ориентированный маршрутизатор",
+      "family": "eip",
+      "classic_intent": "Направляйте каждое сообщение в пункт назначения в зависимости от его содержимого.",
+      "agent_analogue": [
+        {
+          "label": "Классификатор, отправляющий запрос специализированному обработчику",
+          "sources": [
+            "roanbrasil",
+            "anthropic-building-effective-agents"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Automatic delegation by subagent description",
+          "doc": "https://code.claude.com/docs/en/sub-agents"
+        },
+        {
+          "name": "Skill selection by description",
+          "doc": "https://code.claude.com/docs/en/skills"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "own-synthesis",
+      "failure_mode": "Перекрывающиеся описания направляют один и тот же запрос к разным обработчикам от одного запуска к другому.",
+      "verify": "Сохраните набор подсказок маршрутизации для ожидаемого субагента или навыка и запускайте его повторно после каждого изменения описания.",
+      "sources": [
+        "roanbrasil",
+        "anthropic-building-effective-agents",
+        "hohpe-eip",
+        "claude-docs-sub-agents",
+        "claude-docs-skills"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Фрезер BM25, шаг за шагом",
+          "path": "guide/workflows/smart-suggest-routing.md#bm25-router-step-by-step",
+          "image": {
+            "file": "guide/images/bm25-skill-router-en.webp",
+            "alt": "Работающий маршрутизатор на основе контента: профессиональный маршрутизатор BM25, шаг за шагом. В каждом запросе хук сравнивает текст с положительными и отрицательными примерами подсказок для каждого навыка и предлагает до трех навыков, лучшее положительное совпадение которых превосходит их лучшее отрицательное совпадение, и очищает калиброванный порог для каждого навыка."
+          }
+        },
+        {
+          "kind": "template",
+          "title": "Работоспособный маршрутный крюк BM25",
+          "path": "examples/hooks/bm25-routing/README.md"
+        },
+        {
+          "kind": "project",
+          "title": "cc-skill-usage: подсчитывает реальные вызовы навыков в расшифровках.",
+          "url": "https://github.com/FlorianBruniaux/cc-skill-usage"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-utm3frgbun0",
+          "t": 252,
+          "point": "Doctolib's Alfred has a route agent that uses an intention classification model to send each request to a specialized agent."
+        },
+        {
+          "source": "yt-prih-9homfi",
+          "t": 821,
+          "point": "The speaker describes a router that receives a message and decides which agent gets it, by LLM or plain if and else."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/content-based-router.webp",
+        "alt": "Карта Content-Based Router (интеграция с предприятием). Классический вариант: маршрутизация каждого сообщения по его содержимому. В Claude Code: Делегирование и выбор навыков по описанию. Разрывы, когда: Перекрывающиеся описания маршрутизируют один и тот же запрос по-разному. Проверка: повторно запускайте набор тестов маршрутизации после каждого изменения описания."
+      }
+    },
+    {
+      "id": "scatter-gather",
+      "classic": "Scatter-Gather",
+      "family": "eip",
+      "classic_intent": "Отправьте запрос нескольким получателям и агрегируйте их ответы.",
+      "agent_analogue": [
+        {
+          "label": "Параллельные агенты, за которыми следует этап синтеза",
+          "sources": [
+            "aicodingpatterns",
+            "roanbrasil"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Parallel subagents",
+          "doc": "https://code.claude.com/docs/en/sub-agents"
+        },
+        {
+          "name": "Dynamic workflows",
+          "doc": "https://code.claude.com/docs/en/workflows"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "own-synthesis",
+      "failure_mode": "Шаг сбора усредняет противоречивые ответы, а не согласовывает их, а стоимость токена растет с каждым ответвлением.",
+      "verify": "Сделайте явный список разногласий на этапе синтеза и сравните стоимость прогона с базовым уровнем для одного агента.",
+      "sources": [
+        "aicodingpatterns",
+        "roanbrasil",
+        "hohpe-eip",
+        "claude-docs-sub-agents",
+        "claude-docs-workflows"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Динамические рабочие процессы",
+          "path": "guide/workflows/dynamic-workflows.md"
+        },
+        {
+          "kind": "guide",
+          "title": "Best-of-N",
+          "path": "guide/workflows/best-of-n.md"
+        },
+        {
+          "kind": "guide",
+          "title": "Проверка кода с участием нескольких поставщиков",
+          "path": "guide/workflows/multi-provider-code-review.md"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-prih-9homfi",
+          "t": 786,
+          "point": "The speaker describes calling several agents in parallel, waiting for all results and passing them to a summarizer."
+        },
+        {
+          "source": "yt-5akdmangfnk",
+          "t": 46,
+          "point": "In a demo, the agent fans out 15 subagents in parallel and then picks the best result."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/scatter-gather.webp",
+        "alt": "Карта Scatter-Gather (интеграция Enterprise). Классический вариант: отправьте письмо множеству получателей и агрегируйте ответы. В Claude Code: параллельные субагенты и динамические рабочие процессы. Нарушается, когда: На этапе сбора усредняются противоречия, а стоимость растет для каждой ветви. Проверка: Перечислите разногласия и сравните стоимость с одним агентом."
+      }
+    },
+    {
+      "id": "bulkhead",
+      "classic": "Переборка",
+      "family": "distributed",
+      "classic_intent": "Изолируйте ресурсы для каждого потребителя, чтобы один сбой не мог привести к разрушению всей системы.",
+      "agent_analogue": [
+        {
+          "label": "Поагентная изоляция контекста, инструментов и бюджета",
+          "sources": [
+            "aicodingpatterns",
+            "kage-ai"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Subagent context isolation",
+          "doc": "https://code.claude.com/docs/en/sub-agents"
+        },
+        {
+          "name": "isolation: worktree",
+          "doc": "https://code.claude.com/docs/en/worktrees"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "own-synthesis",
+      "failure_mode": "Изолирован только контекст. Параллельные агенты по-прежнему используют одну кассу и перезаписывают файлы друг друга.",
+      "verify": "Обеспечьте изоляцию параллельных подагентов с возможностью записи: рабочее дерево и убедитесь, что статус git в основной проверке остается чистым во время выполнения.",
+      "sources": [
+        "aicodingpatterns",
+        "kage-ai",
+        "claude-docs-sub-agents",
+        "claude-docs-worktrees"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Изоляция песочницы",
+          "path": "guide/security/sandbox-isolation.md"
+        },
+        {
+          "kind": "article",
+          "title": "Планирование-выполнение: запуск более 20 агентов при миграции (изоляция рабочего дерева)",
+          "url": "https://www.florian.bruniaux.com/guides/plan-execute-migrations/"
+        },
+        {
+          "kind": "project",
+          "title": "wt-sweep: обнаруживает рабочие деревья Git и проверяет доказательства интеграции.",
+          "url": "https://wt-sweep.bruniaux.com/"
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/bulkhead.webp",
+        "alt": "Карта переборки (распределенная и отказоустойчивая). Классика: изолируйте ресурсы, чтобы один сбой не мог уничтожить все. В Claude Code: изоляция контекста субагента и рабочие деревья. Разрывы, когда: контекст изолирован, но проверка является общей. Проверка: Предоставьте параллельным писателям собственное рабочее дерево."
+      }
+    },
+    {
+      "id": "circuit-breaker",
+      "classic": "Автоматический выключатель",
+      "family": "distributed",
+      "classic_intent": "Прекратите вызывать сбойную зависимость после повторяющихся сбоев и быстро терпите неудачу.",
+      "agent_analogue": [
+        {
+          "label": "Ограничения по стопам на поворотах, ориентировочная стоимость и глубина петли",
+          "sources": [
+            "agentpatterns-ai",
+            "aicodingpatterns",
+            "go4"
+          ]
+        },
+        {
+          "label": "Прерыватели инструментов, моделей и собственного цикла агента",
+          "sources": [
+            "kage-ai"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Bounded execution: --max-turns and --max-budget-usd (print mode)",
+          "doc": "https://code.claude.com/docs/en/cli-reference"
+        },
+        {
+          "name": "maxTurns in subagent frontmatter",
+          "doc": "https://code.claude.com/docs/en/sub-agents"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "own-synthesis",
+      "failure_mode": "Эти ограничения являются ограниченным исполнением, а не нарушением. Автоматический выключатель отслеживает неисправности и размыкается; эти ограничения фиксируются перед запуском и не отслеживают сбои. --max-turns по умолчанию не имеет ограничений и считает обороты, а не стоимость. --max-budget-usd останавливается на оценке затрат на стороне клиента, и документы предупреждают, что расходы могут превысить ограничение, поэтому оставьте запас.",
+      "verify": "Запустите автоматическое задание с набором --max-turns и --max-budget-usd для задачи, предназначенной для зацикливания, и проверьте, завершается ли оно с ошибкой и насколько заявленные расходы превысили ограничение.",
+      "sources": [
+        "agentpatterns-ai",
+        "aicodingpatterns",
+        "go4",
+        "kage-ai",
+        "fowler-circuit-breaker",
+        "claude-docs-cli-reference",
+        "claude-docs-sub-agents"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Loop & Graph Engineering: напишите контракт цикла",
+          "path": "guide/core/loop-graph-engineering.md#2-write-a-loop-contract"
+        },
+        {
+          "kind": "article",
+          "title": "Проектирование ограниченного цикла проверки",
+          "url": "https://www.florian.bruniaux.com/guides/bounded-code-review-loop/"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-2czyyrtzilg",
+          "t": 1011,
+          "point": "The speaker applies the circuit breaker to agent-to-agent calls: after repeated failures the circuit opens, fails fast, then half-opens to test recovery."
+        },
+        {
+          "source": "yt-gjx19pnhmsw",
+          "t": 1056,
+          "point": "In a demo, an agent that exceeds its per-run budget is killed immediately, which the speaker calls a simple circuit breaker."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/circuit-breaker.webp",
+        "alt": "Карта автоматического выключателя (распределенная и отказоустойчивая). Классика: перестаньте вызывать сбойную зависимость и быстро выполните сбой. В Claude Code: ограничения по оборотам и бюджету на ходу. Ломается, когда: Статические заглушки, часто устанавливаются только на один слой. Проверка: запустите задачу цикла с обоими ограничениями и ожидайте выхода с ошибкой."
+      }
+    },
+    {
+      "id": "saga",
+      "classic": "Сага",
+      "family": "distributed",
+      "classic_intent": "Запустите длинную транзакцию как локальные шаги, каждый из которых имеет компенсирующее действие в случае сбоя на более позднем этапе.",
+      "agent_analogue": [
+        {
+          "label": "Компенсирующие действия по агентскому плану",
+          "sources": [
+            "agentpatterns-ai",
+            "aicodingpatterns",
+            "kage-ai",
+            "srinivasan-2026"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "No native saga: checkpoints plus scripted compensation",
+          "doc": "https://code.claude.com/docs/en/checkpointing"
+        }
+      ],
+      "consensus": "consensus",
+      "provenance": "own-synthesis",
+      "failure_mode": "Перемотка ошибочно принимается за компенсацию. Он восстанавливает только локальные изменения файлов; нажатие, вызов API или запись в базу данных остаются выполненными.",
+      "verify": "Для каждого побочного шага в плане агента запишите компенсирующее действие перед запуском и один раз протестируйте это действие.",
+      "sources": [
+        "agentpatterns-ai",
+        "aicodingpatterns",
+        "kage-ai",
+        "srinivasan-2026",
+        "apc",
+        "claude-docs-checkpointing"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Loop & Graph Engineering: согласовывайте прерванные эффекты перед повторной попыткой.",
+          "path": "guide/core/loop-graph-engineering.md#reconcile-interrupted-effects-before-retrying"
+        },
+        {
+          "kind": "guide",
+          "title": "Безопасность производства",
+          "path": "guide/security/production-safety.md"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-2czyyrtzilg",
+          "t": 1142,
+          "point": "The speaker presents the compensation or saga pattern: each agent has execute and compensate, and on failure the orchestrator walks backward calling compensate."
+        },
+        {
+          "source": "yt-hd9-v56fnri",
+          "t": 730,
+          "point": "The speaker says a multi-step agent that fails midway must reverse the whole transaction across systems and needs a defined compensation operation."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/saga.webp",
+        "alt": "Карта саги (распределение и устойчивость). Классика: локальные шаги, каждый из которых имеет компенсирующее действие. В Claude Code: Никакой родной саги: чекпоинты плюс скриптовая компенсация. Прекращается, когда: Перемотка отменяет локальные изменения, а не нажатие или вызов API. Проверка: Напишите и протестируйте компенсацию для каждого побочного эффекта."
+      }
+    },
+    {
+      "id": "sidecar",
+      "classic": "Коляска",
+      "family": "distributed",
+      "classic_intent": "Прикрепите сквозные возможности (ведение журнала, политика, сеть) рядом со службой, а не внутри нее.",
+      "agent_analogue": [
+        {
+          "label": "Использование агента в цикле модели",
+          "sources": [
+            "kage-ai"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Hooks, permissions, and sandboxing around the loop",
+          "doc": "https://code.claude.com/docs/en/sandboxing"
+        }
+      ],
+      "consensus": "single-source",
+      "provenance": "own-synthesis",
+      "failure_mode": "Политика живет в подсказке, а не в коляске, поэтому модель может отговориться от нее. Перехват политики также может не открыться: в большинстве случаев перехватчик, который выходит из строя или истекает время ожидания, пропускает действие, если он не устанавливает onFailure: «блокировать».",
+      "verify": "Перечислите каждое правило безопасности и назовите уровень, который его обеспечивает: перехватчик, правило разрешений, песочница или только приглашение. Для каждого перехватчика политики укажите на отсутствующий скрипт и проверьте, заблокировано ли действие.",
+      "sources": [
+        "kage-ai",
+        "claude-docs-sandboxing",
+        "claude-docs-hooks",
+        "claude-docs-permissions"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Родная песочница",
+          "path": "guide/security/sandbox-native.md"
+        },
+        {
+          "kind": "article",
+          "title": "Безопасность Claude Code: поверхность атаки проверяют несколько команд",
+          "url": "https://www.florian.bruniaux.com/guides/claude-code-attack-surface/"
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/sidecar.webp",
+        "alt": "Карта Sidecar (распределенная и отказоустойчивая). Классический вариант: сквозная политика действует рядом с услугой. В Claude Code: перехватчики, разрешения и песочница вокруг цикла. Перерыв, когда: политика в командной строке или перехватчик, который не открывается. Проверка: Назовите уровень соблюдения для каждого правила безопасности."
+      }
+    },
+    {
+      "id": "event-sourcing",
+      "classic": "Поиск событий",
+      "family": "distributed",
+      "classic_intent": "Сохраняйте каждое изменение состояния как событие и восстанавливайте состояние, воспроизводя журнал.",
+      "agent_analogue": [
+        {
+          "label": "Журнал трассировки как поток событий запуска агента",
+          "sources": [
+            "kage-ai"
+          ]
+        }
+      ],
+      "claude_code": [
+        {
+          "name": "Session transcripts and resume (conversation persistence)",
+          "doc": "https://code.claude.com/docs/en/sessions"
+        }
+      ],
+      "consensus": "single-source",
+      "provenance": "own-synthesis",
+      "failure_mode": "Транскрипт берется для всего журнала событий. Он записывает диалог, включая выходные данные модели и результаты инструмента, поэтому --resume перестраивает диалог без повторного вызова модели. Он не записывает состояние файлов, ветвей или служб, которые изменил сеанс, поэтому не может восстановить это состояние, а ходы после возобновления представляют собой вызовы новой модели.",
+      "verify": "Прежде чем полагаться на возобновленный сеанс, убедитесь, что файлы, ветка и службы, которые он предполагает, по-прежнему совпадают, и сохраните состояние, необходимое для восстановления, в git или явном журнале.",
+      "sources": [
+        "kage-ai",
+        "claude-docs-sessions"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Наблюдаемость: поиск и возобновление сеанса",
+          "path": "guide/ops/observability.md"
+        },
+        {
+          "kind": "guide",
+          "title": "Отслеживаемость ИИ",
+          "path": "guide/ops/ai-traceability.md"
+        },
+        {
+          "kind": "project",
+          "title": "cc-sessions: поиск и анализ истории сессий Claude Code.",
+          "url": "https://github.com/FlorianBruniaux/cc-sessions"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-vi-2nasppag",
+          "t": 105,
+          "point": "The speaker wants to build a coding agent harness that is purely event sourced, because the agent already keeps a log of events."
+        },
+        {
+          "source": "yt-upwgam2mkhy",
+          "t": 259,
+          "point": "The speaker argues the log is the durable history from which every view of the agent (debugging, auditing, compaction) is a projection."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/event-sourcing.webp",
+        "alt": "Карточка источника событий (распределенное и отказоустойчивое). Классика: сохраняйте каждое изменение как событие, воспроизводите его для восстановления. В Claude Code: расшифровки сеансов и --resume. Разрывы, когда: расшифровка сохраняет разговор, а не файлы или службы. Проверка: проверьте файлы, ветки и службы, прежде чем доверять резюме."
+      }
+    }
+  ],
+  "native": [
+    {
+      "id": "orchestrator-workers",
+      "name": "Orchestrator-workers",
+      "summary": "Центральная модель разбивает задачу во время выполнения, делегирует части и синтезирует результаты.",
+      "why_new": "Closest classic pattern: Mediator. The difference is that the model decides the decomposition during the run instead of the designer drawing it. Delegation pays on parallel work: in Google Research's controlled study, every multi-agent variant degraded a sequential planning task by 39 to 70%.",
+      "claude_code": [
+        {
+          "name": "Subagents",
+          "doc": "https://code.claude.com/docs/en/sub-agents"
+        },
+        {
+          "name": "Dynamic workflows",
+          "doc": "https://code.claude.com/docs/en/workflows"
+        }
+      ],
+      "sources": [
+        "anthropic-building-effective-agents",
+        "claude-docs-sub-agents",
+        "claude-docs-workflows",
+        "kim-liu-2026"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Динамические рабочие процессы",
+          "path": "guide/workflows/dynamic-workflows.md"
+        },
+        {
+          "kind": "guide",
+          "title": "Команды агентов",
+          "path": "guide/workflows/agent-teams.md"
+        },
+        {
+          "kind": "article",
+          "title": "Планирование-выполнение: запуск более 20 агентов при миграции",
+          "url": "https://www.florian.bruniaux.com/guides/plan-execute-migrations/"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-ow1we5pzk-o",
+          "t": 276,
+          "point": "The speaker describes Factory's Missions system as an orchestrator that plans, workers that execute, and validators that verify."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/orchestrator-workers.webp",
+        "alt": "Карточка «Оркестратор-работник» (паттерн «Агент-родной»). Что он делает: модель разделяет задачу во время выполнения, делегирует и синтезирует. В Claude Code: Субагенты и динамические рабочие процессы. Что нового: Модель рисует декомпозицию и оплачивает параллельную работу."
+      }
+    },
+    {
+      "id": "evaluator-optimizer",
+      "name": "Evaluator-optimizer",
+      "summary": "Один вызов выдает ответ, другой оценивает его и отправляет обратную связь в цикле.",
+      "why_new": "The test oracle is itself a model, so the loop can converge on a wrong answer both sides accept.",
+      "claude_code": [
+        {
+          "name": "Reviewer subagent with its own context",
+          "doc": "https://code.claude.com/docs/en/sub-agents"
+        },
+        {
+          "name": "Stop hook that runs the real tests",
+          "doc": "https://code.claude.com/docs/en/hooks"
+        }
+      ],
+      "sources": [
+        "anthropic-building-effective-agents",
+        "claude-docs-sub-agents",
+        "claude-docs-hooks"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Best-of-N",
+          "path": "guide/workflows/best-of-n.md"
+        },
+        {
+          "kind": "article",
+          "title": "Когда независимый рецензент заслужил свое место",
+          "url": "https://www.florian.bruniaux.com/blog/articles/reviewer-you-ignore/"
+        },
+        {
+          "kind": "article",
+          "title": "Проектирование ограниченного цикла проверки",
+          "url": "https://www.florian.bruniaux.com/guides/bounded-code-review-loop/"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-mr-waveprwe",
+          "t": 1141,
+          "point": "The speakers describe a generator and evaluator split into separate contexts, where the evaluator tests the result with Playwright and feeds critique back."
+        },
+        {
+          "source": "yt-ow1we5pzk-o",
+          "t": 334,
+          "point": "A separate validator role verifies the work, including end-to-end behavior, instead of only reading the code."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/evaluator-optimizer.webp",
+        "alt": "Карточка оценщика-оптимизатора (собственный шаблон агента). Что он делает: один отвечает на вызов, другой оценивает и отправляет отзыв. В Claude Code: субагент рецензента и стоп-хук, который запускает настоящие тесты. Что нового: Судья является образцом, поэтому обе стороны могут принять неправильный ответ."
+      }
+    },
+    {
+      "id": "plan-then-execute",
+      "name": "Plan-then-execute",
+      "summary": "Отделите этап планирования только для чтения от этапа изменения файлов.",
+      "why_new": "The plan is a reviewable artifact written before any file changes, so a wrong approach can be caught before it costs edits. Reviewing it adds a checkpoint; it does not replace review of the code that follows, and the executing model can differ from the planning one (opusplan plans with Opus and executes with Sonnet).",
+      "claude_code": [
+        {
+          "name": "Plan mode",
+          "doc": "https://code.claude.com/docs/en/permission-modes"
+        }
+      ],
+      "sources": [
+        "nibzard",
+        "claude-docs-permission-modes",
+        "claude-docs-model-config"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Плановый рабочий процесс",
+          "path": "guide/workflows/plan-driven.md"
+        },
+        {
+          "kind": "guide",
+          "title": "Планирование двух экземпляров",
+          "path": "guide/workflows/dual-instance-planning.md"
+        },
+        {
+          "kind": "article",
+          "title": "Планирование-выполнение: запуск более 20 агентов при миграции",
+          "url": "https://www.florian.bruniaux.com/guides/plan-execute-migrations/"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-wnx-s-rxvxk",
+          "t": 22,
+          "point": "The speaker plans every change in plan mode, has the AI execute the plan, then tests and commits."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/plan-then-execute.webp",
+        "alt": "Карточка «Планируй, затем выполняй» (собственный шаблон агента). Что он делает: планируйте доступ только для чтения перед любыми изменениями в файле. В Claude Code: Режим планирования. Что нового: план можно просмотреть перед любым редактированием, код по-прежнему требует проверки."
+      }
+    },
+    {
+      "id": "context-isolation",
+      "name": "Context isolation",
+      "summary": "Запустите зашумленную побочную задачу в отдельном контексте и верните сводку результата.",
+      "why_new": "Closest classic pattern: Bulkhead. Here the resource being protected is the context window, not threads or connections.",
+      "claude_code": [
+        {
+          "name": "Subagents work in their own context and report a summary",
+          "doc": "https://code.claude.com/docs/en/sub-agents"
+        }
+      ],
+      "sources": [
+        "lance-martin",
+        "claude-docs-sub-agents"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Agent Harness Engineering: управление субагентами",
+          "path": "guide/core/agent-harness.md#24-sub-agent-management"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-5akdmangfnk",
+          "t": 110,
+          "point": "Subagents give context isolation: each runs in its own context window and returns only its results, so the main agent's context stays clean."
+        },
+        {
+          "source": "yt-z-c11pv-uvu",
+          "t": 917,
+          "point": "The speaker names the anti-pattern of letting every subtask dump its full output into the primary thread and says to isolate subtask output instead."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/context-isolation.webp",
+        "alt": "Карта изоляции контекста (собственный шаблон агента). Что он делает: запускает зашумленную побочную задачу в отдельном контексте и возвращает сводку. В Claude Code: Субагенты работают в своем собственном контексте и сообщают сводку. Что нового: Защищенный ресурс — это контекстное окно."
+      }
+    },
+    {
+      "id": "context-compaction",
+      "name": "Context compaction",
+      "summary": "Подведите итоги разговора, когда оно приблизится к пределу окна, и продолжайте с подведения итогов.",
+      "why_new": "State is lossy by design: what the summary drops leaves the active context until something reloads it. Claude Code re-injects the project CLAUDE.md, auto memory, the plan, and invoked skills (capped), and re-reads up to five recent files; the rest of the conversation survives only as the summary.",
+      "claude_code": [
+        {
+          "name": "Auto compaction and /compact",
+          "doc": "https://code.claude.com/docs/en/context-window"
+        }
+      ],
+      "sources": [
+        "lance-martin",
+        "nibzard",
+        "claude-docs-context-window"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Архитектура: автоматическое уплотнение",
+          "path": "guide/core/architecture.md#auto-compaction"
+        },
+        {
+          "kind": "guide",
+          "title": "Системы памяти: сохраняйте историю отдельно от сжатия",
+          "path": "guide/core/memory-systems.md#keep-history-distinct-from-compaction"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-wp3hjuxd918",
+          "t": 535,
+          "point": "The speakers define compaction as keeping the smallest context that can still answer the question and dropping or saving the rest."
+        },
+        {
+          "source": "yt-upwgam2mkhy",
+          "t": 272,
+          "point": "The speaker explains that a log can grow forever while a model's view cannot, so the log must be compacted into a smaller lossy representation."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/context-compaction.webp",
+        "alt": "Карта сжатия контекста (собственный шаблон агента). Что он делает: подводит итоги вблизи предела окна и продолжает с итоговых данных. В Claude Code: Автосжатие и /compact. Что нового: Lossy по дизайну: CLAUDE.md, память и план перезагружаются, остальное живет в резюме."
+      }
+    },
+    {
+      "id": "progressive-disclosure",
+      "name": "Progressive disclosure",
+      "summary": "Сначала загружайте краткие описания, а полные инструкции — только тогда, когда они необходимы.",
+      "why_new": "Selection happens by the model reading descriptions, so a vague description hides a capability. Skills preloaded through a subagent's skills field are the exception: their full content loads at launch.",
+      "claude_code": [
+        {
+          "name": "Skills: descriptions at start, full content on use",
+          "doc": "https://code.claude.com/docs/en/skills"
+        },
+        {
+          "name": "MCP tool search",
+          "doc": "https://code.claude.com/docs/en/mcp"
+        }
+      ],
+      "sources": [
+        "lance-martin",
+        "claude-docs-skills",
+        "claude-docs-mcp"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Шаблоны проектирования навыков",
+          "path": "guide/core/skill-design-patterns.md"
+        },
+        {
+          "kind": "guide",
+          "title": "Smart-Suggest маршрутизация",
+          "path": "guide/workflows/smart-suggest-routing.md"
+        },
+        {
+          "kind": "article",
+          "title": "Ваш CLAUDE.md слишком длинный.",
+          "url": "https://www.florian.bruniaux.com/blog/articles/your-claudemd-is-too-long/"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-gmaqkinjv1e",
+          "t": 265,
+          "point": "The speaker says skills brought progressive disclosure, which MCP tools lacked, and later ties Claude Code tool search to the same idea for MCP tools."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/progressive-disclosure.webp",
+        "alt": "Карта прогрессивного раскрытия информации (собственный шаблон агента). Что он делает: Сначала краткое описание, полные инструкции по запросу. В Claude Code: Навыки и поиск инструментов MCP. Что нового: Расплывчатое описание скрывает возможности."
+      }
+    },
+    {
+      "id": "deterministic-gate",
+      "name": "Deterministic gate",
+      "summary": "Поместите все, что всегда должно происходить, в код, который выходит за рамки оценки модели.",
+      "why_new": "Closest classic patterns: Sidecar and Chain of Responsibility. The difference is that the rest of the system is probabilistic, so the line between suggestion and enforcement has to be drawn on purpose.",
+      "claude_code": [
+        {
+          "name": "PreToolUse hooks",
+          "doc": "https://code.claude.com/docs/en/hooks"
+        },
+        {
+          "name": "Permission deny rules",
+          "doc": "https://code.claude.com/docs/en/permissions"
+        }
+      ],
+      "sources": [
+        "anthropic-steering",
+        "claude-docs-memory",
+        "claude-docs-hooks"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Справочник по событиям перехватчиков",
+          "path": "guide/core/hooks-events-reference.md"
+        },
+        {
+          "kind": "article",
+          "title": "Зеленый обзор не является шлюзом для слияния",
+          "url": "https://www.florian.bruniaux.com/blog/articles/your-gate-is-decorative/"
+        },
+        {
+          "kind": "article",
+          "title": "Превратите повторяющиеся комментарии к отзывам в проверенные элементы управления",
+          "url": "https://www.florian.bruniaux.com/blog/articles/recurring-review-comments-controls/"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-rbjwzzk2lu0",
+          "t": 967,
+          "point": "An Anthropic speaker describes a proxy layer that counts and compares, returns a 403 when a budget is crossed or a delete is attempted, and cannot be talked out of the rule by prompt injection."
+        },
+        {
+          "source": "yt-3csi8qaon-s",
+          "t": 146,
+          "point": "The speaker uses a PreToolUse hook that blocks a tool call before it executes, turning CLAUDE.md instructions into deterministic hooks."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/deterministic-gate.webp",
+        "alt": "Детерминированная пропускная карта (собственный шаблон агента). Что он делает: то, что всегда должно происходить, выходит за рамки модели. В Claude Code: PreToolUse перехватывает и запрещает правила. Что нового: намеренно проведите грань между предложением и принуждением."
+      }
+    },
+    {
+      "id": "goal-loop",
+      "name": "Goal loop",
+      "summary": "Поддерживайте работу агента до тех пор, пока не будет выполнено заявленное условие завершения.",
+      "why_new": "Whether the goal is met is judged by a model, so the condition must be checkable.",
+      "claude_code": [
+        {
+          "name": "/goal",
+          "doc": "https://code.claude.com/docs/en/goal"
+        },
+        {
+          "name": "Stop hook continuation",
+          "doc": "https://code.claude.com/docs/en/hooks"
+        }
+      ],
+      "sources": [
+        "nibzard",
+        "claude-docs-goal",
+        "claude-docs-hooks"
+      ],
+      "related": [
+        {
+          "kind": "guide",
+          "title": "Циклическая и графическая инженерия",
+          "path": "guide/core/loop-graph-engineering.md"
+        },
+        {
+          "kind": "article",
+          "title": "Проектирование ограниченного цикла проверки",
+          "url": "https://www.florian.bruniaux.com/guides/bounded-code-review-loop/"
+        }
+      ],
+      "videos": [
+        {
+          "source": "yt-mr-waveprwe",
+          "t": 506,
+          "point": "The speakers explain the Ralph loop: feed one prompt to the CLI and run it in a loop until all tasks are complete, with a stop hook and a max iteration count in Anthropic's plugin."
+        }
+      ],
+      "infographic": {
+        "file": "guide/images/ai-design-patterns/patterns/goal-loop.webp",
+        "alt": "Карточка цикла целей (собственный шаблон агента). Что он делает: продолжает работать до тех пор, пока не будет выполнено установленное условие. В Claude Code: /goal и продолжение Stop-хука. Что нового: цель оценивается моделью, поэтому сделайте ее проверяемой."
+      }
+    }
+  ],
+  "anti_patterns": [
+    {
+      "id": "prompt-as-enforcement",
+      "name": "Prompt as enforcement",
+      "symptom": "A must-never rule lives only in CLAUDE.md or a system prompt.",
+      "fix": "Deterministic gate: a PreToolUse hook with onFailure: \"block\", or a deny rule, with a test.",
+      "category": "specification",
+      "patterns": [
+        "deterministic-gate",
+        "facade"
+      ],
+      "sources": [
+        "claude-docs-memory",
+        "anthropic-steering"
+      ]
+    },
+    {
+      "id": "context-flooding",
+      "name": "Context flooding",
+      "symptom": "Workers return full transcripts or logs to the coordinating thread.",
+      "fix": "Context isolation: ask each worker for a bounded final report.",
+      "category": "inter-agent",
+      "patterns": [
+        "context-isolation",
+        "mediator"
+      ],
+      "sources": [
+        "claude-docs-sub-agents",
+        "lance-martin"
+      ]
+    },
+    {
+      "id": "unbounded-loop",
+      "name": "Unbounded loop",
+      "symptom": "An automated run has no turn, cost, or depth limit.",
+      "fix": "Bounded execution on every layer: --max-turns, --max-budget-usd with headroom, maxTurns, spawn depth.",
+      "category": "specification",
+      "patterns": [
+        "circuit-breaker",
+        "composite"
+      ],
+      "sources": [
+        "mast",
+        "go4",
+        "claude-docs-cli-reference"
+      ]
+    },
+    {
+      "id": "unverified-done",
+      "name": "Unverified done",
+      "symptom": "The agent declares success without running a check, or stops early.",
+      "fix": "Evaluator-optimizer with a real test, enforced by a Stop hook.",
+      "category": "verification",
+      "patterns": [
+        "evaluator-optimizer",
+        "template-method"
+      ],
+      "sources": [
+        "mast",
+        "roanbrasil"
+      ]
+    },
+    {
+      "id": "step-repetition",
+      "name": "Step repetition",
+      "symptom": "The agent redoes completed steps after an interruption or a reset of the conversation.",
+      "fix": "Durable progress outside the context (a task list or a file) and idempotent side effects.",
+      "category": "specification",
+      "patterns": [
+        "event-sourcing",
+        "saga"
+      ],
+      "sources": [
+        "mast",
+        "roanbrasil"
+      ]
+    },
+    {
+      "id": "rewind-as-rollback",
+      "name": "Rewind as rollback",
+      "symptom": "A team counts on /rewind to undo shell commands or remote effects.",
+      "fix": "Saga thinking: git commits before risky work, a written compensation for each external effect.",
+      "category": "harness",
+      "patterns": [
+        "memento",
+        "saga"
+      ],
+      "sources": [
+        "claude-docs-checkpointing"
+      ]
+    },
+    {
+      "id": "ordered-hooks-assumption",
+      "name": "Ordered hooks assumption",
+      "symptom": "A hook relies on another hook for the same event having run first.",
+      "fix": "Independent observers: each hook passes or blocks on its own.",
+      "category": "harness",
+      "patterns": [
+        "observer",
+        "decorator"
+      ],
+      "sources": [
+        "claude-docs-hooks"
+      ]
+    },
+    {
+      "id": "specific-allow-overrides-deny",
+      "name": "Specific allow overrides deny",
+      "symptom": "A narrow allow rule is added to punch a hole in a broad deny.",
+      "fix": "Permission rules are evaluated deny, then ask, then allow: narrow the deny instead.",
+      "category": "harness",
+      "patterns": [
+        "chain-of-responsibility"
+      ],
+      "sources": [
+        "claude-docs-permissions"
+      ]
+    },
+    {
+      "id": "unguarded-shared-checkout",
+      "name": "Unguarded shared checkout",
+      "symptom": "Parallel write-capable agents edit the same working tree.",
+      "fix": "Bulkhead: isolation: worktree per writing agent.",
+      "category": "inter-agent",
+      "patterns": [
+        "bulkhead",
+        "scatter-gather"
+      ],
+      "sources": [
+        "claude-docs-worktrees",
+        "kage-ai"
+      ]
+    },
+    {
+      "id": "untrusted-content-as-instructions",
+      "name": "Untrusted content as instructions",
+      "symptom": "Fetched pages, issue text, or tool output are allowed to steer the agent's next action.",
+      "fix": "Trust boundary: treat external content as data, and keep write and network tools behind permission rules.",
+      "category": "harness",
+      "patterns": [
+        "sidecar",
+        "command"
+      ],
+      "sources": [
+        "roanbrasil",
+        "claude-docs-security"
+      ]
+    }
+  ],
+  "anti_pattern_categories": [
+    {
+      "id": "specification",
+      "label": "Проблемы со спецификациями",
+      "source": "mast"
+    },
+    {
+      "id": "inter-agent",
+      "label": "Межагентское рассогласование",
+      "source": "mast"
+    },
+    {
+      "id": "verification",
+      "label": "Проверка задачи",
+      "source": "mast"
+    },
+    {
+      "id": "harness",
+      "label": "Механика ремня безопасности (помимо MAST)",
+      "source": null
+    }
+  ],
+  "sources": [
+    {
+      "id": "agentpatterns-ai",
+      "title": "Классические шаблоны SE как аналоги дизайна агентов",
+      "author": "AgentPatterns.ai",
+      "url": "https://agentpatterns.ai/patterns/agent-design/classical-se-patterns-agent-analogues/",
+      "kind": "crosswalk"
+    },
+    {
+      "id": "aicodingpatterns",
+      "title": "Покровители GoF и агенты IA: полная карта",
+      "author": "Esther Aznar, Ivan Garcia Villar",
+      "url": "https://aicodingpatterns.com/patterns/patrones-gof-patrones-agenticos-mapeo-completo/",
+      "kind": "crosswalk"
+    },
+    {
+      "id": "kage-ai",
+      "title": "Эволюция шаблона: GoF, распределенный, агентный",
+      "author": "Jia Huang",
+      "url": "https://kage-ai.com/research/pattern-evolution/",
+      "kind": "crosswalk"
+    },
+    {
+      "id": "roanbrasil",
+      "title": "Шаблоны интеграции агентов",
+      "author": "Roan Brasil",
+      "url": "https://github.com/roanbrasil/agents-integration-patterns",
+      "kind": "crosswalk"
+    },
+    {
+      "id": "go4",
+      "title": "GO4: язык шаблонов для разработки LLM",
+      "author": "James Davies",
+      "url": "https://github.com/jlldavies/go4-llm-design-patterns",
+      "kind": "catalog"
+    },
+    {
+      "id": "ahep",
+      "title": "Инженерные шаблоны использования агентов",
+      "author": "Ashish Patel",
+      "url": "https://github.com/ashishpatel26/agent-harness-engineering-pattern",
+      "kind": "catalog"
+    },
+    {
+      "id": "apc",
+      "title": "Каталог шаблонов агентов",
+      "author": "Marco Nissen",
+      "url": "https://github.com/agentpatternscatalog/patterns",
+      "kind": "catalog"
+    },
+    {
+      "id": "nibzard",
+      "title": "Потрясающие агентские шаблоны",
+      "author": "Nikola Balic and contributors",
+      "url": "https://github.com/nibzard/awesome-agentic-patterns",
+      "kind": "catalog"
+    },
+    {
+      "id": "huang-zhou-2026",
+      "title": "Двумерная структура шаблонов проектирования агентов ИИ: когнитивная функция и топология выполнения (arXiv 2605.13850)",
+      "author": "Jia Huang, Joey Tianyi Zhou",
+      "url": "https://arxiv.org/abs/2605.13850",
+      "kind": "paper"
+    },
+    {
+      "id": "huang-et-al-2026",
+      "title": "Выбор и составление шаблонов проектирования агентов: промышленные примеры и эксперименты с контролируемыми эталонными системами (arXiv 2610.25629)",
+      "author": "Jia Huang, Bingsheng Ru, Bo Liang, Yuke Xiong, Haiyan Fan, Joey Tianyi Zhou",
+      "url": "https://arxiv.org/abs/2610.25629",
+      "kind": "paper"
+    },
+    {
+      "id": "srinivasan-2026",
+      "title": "Методология выбора и составления шаблонов архитектуры времени выполнения для производственных агентов LLM (arXiv 2605.20173)",
+      "author": "Vasundra Srinivasan",
+      "url": "https://arxiv.org/abs/2605.20173",
+      "kind": "paper"
+    },
+    {
+      "id": "sarkar-2025",
+      "title": "Обзор взаимодействия агента LLM с MCP: обзор, ориентированный на шаблоны проектирования программного обеспечения (arXiv 2506.05364)",
+      "author": "Sarkar and Sarkar",
+      "url": "https://arxiv.org/abs/2506.05364",
+      "kind": "paper"
+    },
+    {
+      "id": "mast",
+      "title": "Почему многоагентные системы LLM терпят неудачу? (arXiv 2503.13657)",
+      "author": "Cemri et al.",
+      "url": "https://arxiv.org/abs/2503.13657",
+      "kind": "paper"
+    },
+    {
+      "id": "kim-liu-2026",
+      "title": "На пути к науке о системах масштабирующих агентов (arXiv 2512.08296)",
+      "author": "Yubin Kim, Xin Liu (Google Research)",
+      "url": "https://research.google/blog/towards-a-science-of-scaling-agent-systems-when-and-why-agent-systems-work/",
+      "kind": "paper"
+    },
+    {
+      "id": "anthropic-building-effective-agents",
+      "title": "Создание эффективных агентов",
+      "author": "Anthropic",
+      "url": "https://www.anthropic.com/engineering/building-effective-agents",
+      "kind": "vendor"
+    },
+    {
+      "id": "anthropic-steering",
+      "title": "Управление Claude Code: навыки, приемы, правила, субагенты и многое другое.",
+      "author": "Anthropic",
+      "url": "https://claude.com/resources/articles/steering-claude-code-skills-hooks-rules-subagents-and-more",
+      "kind": "vendor"
+    },
+    {
+      "id": "lance-martin",
+      "title": "Шаблоны проектирования агентов",
+      "author": "Lance Martin",
+      "url": "https://rlancemartin.github.io/2026/01/09/agent_design/",
+      "kind": "article"
+    },
+    {
+      "id": "hohpe-eip",
+      "title": "Шаблоны корпоративной интеграции",
+      "author": "Gregor Hohpe, Bobby Woolf",
+      "url": "https://www.enterpriseintegrationpatterns.com/",
+      "kind": "classic"
+    },
+    {
+      "id": "fowler-circuit-breaker",
+      "title": "Автоматический выключатель",
+      "author": "Martin Fowler",
+      "url": "https://martinfowler.com/bliki/CircuitBreaker.html",
+      "kind": "classic"
+    },
+    {
+      "id": "claude-docs-hooks",
+      "title": "Справочник по крючкам",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/hooks",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-hooks-guide",
+      "title": "Автоматизируйте рабочие процессы с помощью хуков",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/hooks-guide",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-permissions",
+      "title": "Разрешения",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/permissions",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-permission-modes",
+      "title": "Режимы разрешения",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/permission-modes",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-checkpointing",
+      "title": "Контрольно-пропускной пункт",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/checkpointing",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-sub-agents",
+      "title": "Субагенты",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/sub-agents",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-agent-teams",
+      "title": "Команды агентов",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/agent-teams",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-workflows",
+      "title": "Динамические рабочие процессы",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/workflows",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-memory",
+      "title": "Память (CLAUDE.md)",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/memory",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-skills",
+      "title": "Навыки",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/skills",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-mcp",
+      "title": "MCP",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/mcp",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-cli-reference",
+      "title": "Ссылка CLI",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/cli-reference",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-headless",
+      "title": "Запустите Claude Code программно",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/headless",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-env-vars",
+      "title": "Переменные среды",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/env-vars",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-model-config",
+      "title": "Конфигурация модели",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/model-config",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-tools-reference",
+      "title": "Справочник по инструментам",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/tools-reference",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-worktrees",
+      "title": "Рабочие деревья",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/worktrees",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-sandboxing",
+      "title": "Песочница",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/sandboxing",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-sessions",
+      "title": "Сессии",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/sessions",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-context-window",
+      "title": "Контекстное окно",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/context-window",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-goal",
+      "title": "Продолжайте Claude работать над достижением цели",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/goal",
+      "kind": "official"
+    },
+    {
+      "id": "claude-docs-security",
+      "title": "Безопасность",
+      "author": "Claude Code docs",
+      "url": "https://code.claude.com/docs/en/security",
+      "kind": "official"
+    },
+    {
+      "id": "osmani-2026",
+      "title": "Агент Харнесс Инжиниринг",
+      "author": "Addy Osmani",
+      "url": "https://addyosmani.com/blog/agent-harness-engineering/",
+      "kind": "article"
+    },
+    {
+      "id": "bockeler-2026",
+      "title": "Разработка программного обеспечения для пользователей агентов кодирования",
+      "author": "Birgitta Böckeler (martinfowler.com)",
+      "url": "https://martinfowler.com/articles/harness-engineering.html",
+      "kind": "article"
+    },
+    {
+      "id": "willison-agentic-patterns",
+      "title": "Паттерны агентной инженерии",
+      "author": "Simon Willison",
+      "url": "https://simonwillison.net/guides/agentic-engineering-patterns/",
+      "kind": "article"
+    },
+    {
+      "id": "ng-2024",
+      "title": "Шаблоны агентного проектирования. Часть 1 (Пакет)",
+      "author": "Andrew Ng",
+      "url": "https://www.deeplearning.ai/the-batch/how-agents-can-improve-llm-performance/",
+      "kind": "article"
+    },
+    {
+      "id": "huyen-2025",
+      "title": "Агенты",
+      "author": "Chip Huyen",
+      "url": "https://huyenchip.com/2025/01/07/agents.html",
+      "kind": "article"
+    },
+    {
+      "id": "weng-2023",
+      "title": "Автономные агенты на базе LLM",
+      "author": "Lilian Weng",
+      "url": "https://lilianweng.github.io/posts/2023-06-23-agent/",
+      "kind": "article"
+    },
+    {
+      "id": "agents-best-practices",
+      "title": "agents-best-practices",
+      "author": "DenisSergeevitch",
+      "url": "https://github.com/DenisSergeevitch/agents-best-practices",
+      "kind": "catalog"
+    },
+    {
+      "id": "awesome-agentic-system-design",
+      "title": "Потрясающий дизайн агентской системы",
+      "author": "gtzheng",
+      "url": "https://github.com/gtzheng/Awesome-Agentic-System-Design",
+      "kind": "catalog"
+    },
+    {
+      "id": "agentic-design-patterns-code",
+      "title": "Agentic-Design-Patterns",
+      "author": "josephsenior",
+      "url": "https://github.com/josephsenior/Agentic-Design-Patterns",
+      "kind": "catalog"
+    },
+    {
+      "id": "yt-2czyyrtzilg",
+      "title": "От хаоса к хореографии: модели многоагентной оркестровки, которые действительно работают",
+      "author": "Sandipan Bhaumik",
+      "url": "https://www.youtube.com/watch?v=2czYyrTzILg",
+      "kind": "video"
+    },
+    {
+      "id": "yt-3csi8qaon-s",
+      "title": "Как заставить Claude Code использовать правильный CLI (не используйте CLAUDE.md)",
+      "author": "Matt Pocock",
+      "url": "https://www.youtube.com/watch?v=3CSi8QAoN-s",
+      "kind": "video"
+    },
+    {
+      "id": "yt-5akdmangfnk",
+      "title": "Динамические субагенты: как надежно запускать параллельные агенты в глубоких агентах",
+      "author": "Colin (LangChain)",
+      "url": "https://www.youtube.com/watch?v=5AkdMangfNk",
+      "kind": "video"
+    },
+    {
+      "id": "yt-5wks1w-auky",
+      "title": "Замедлить, чтобы ускориться: искусственный интеллект и разработка программного обеспечения",
+      "author": "The Pragmatic Engineer",
+      "url": "https://www.youtube.com/watch?v=5wks1W-auKY",
+      "kind": "video"
+    },
+    {
+      "id": "yt-aph1vx0olmq",
+      "title": "Детерминированная инфраструктура для недетерминированных агентов ИИ",
+      "author": "Nishant Gupta",
+      "url": "https://www.youtube.com/watch?v=APh1Vx0oLmQ",
+      "kind": "video"
+    },
+    {
+      "id": "yt-fvxy8opoi8o",
+      "title": "Предпочтения перед эталонными тестами: маршрутизация модели",
+      "author": "Archana Kamath and Tyler Gillam",
+      "url": "https://www.youtube.com/watch?v=FvxY8oPoI8o",
+      "kind": "video"
+    },
+    {
+      "id": "yt-gjx19pnhmsw",
+      "title": "FinOps для агентов ИИ: кто потратил все токены?",
+      "author": "Tisha Chawla and Susheem Koul",
+      "url": "https://www.youtube.com/watch?v=GJX19pNhmSw",
+      "kind": "video"
+    },
+    {
+      "id": "yt-gmaqkinjv1e",
+      "title": "Проблема с навыками: как мы использовали ИИ, чтобы сделать агентов действительно хорошими в Supabase",
+      "author": "Pedro Rodrigues",
+      "url": "https://www.youtube.com/watch?v=GmAQKINjv1E",
+      "kind": "video"
+    },
+    {
+      "id": "yt-nmwgxvm-to",
+      "title": "Агенты по кодированию Stripe отправляют 1300 PR КАЖДУЮ неделю — вот как они это делают",
+      "author": "Cole Medin",
+      "url": "https://www.youtube.com/watch?v=NMWgXvm--to",
+      "kind": "video"
+    },
+    {
+      "id": "yt-pjothbhlbao",
+      "title": "Унификация интеграции искусственного интеллекта с Model Context Protocol",
+      "author": "Christian Tzolov and Dariusz Jędrzejczyk (Devoxx)",
+      "url": "https://www.youtube.com/watch?v=PJOthBhLbao",
+      "kind": "video"
+    },
+    {
+      "id": "yt-prih-9homfi",
+      "title": "Akka: корпоративная среда выполнения для отказоустойчивого агентного ИИ",
+      "author": "Renato Guerra Cavalcanti (Devoxx)",
+      "url": "https://www.youtube.com/watch?v=PrIh_9HomfI",
+      "kind": "video"
+    },
+    {
+      "id": "yt-srfxsjegc6q",
+      "title": "От оркестровки LLM к автономным агентам: шаблоны агентного ИИ с LangChain4j",
+      "author": "Clément Escoffier and Mario Fusco (Devoxx)",
+      "url": "https://www.youtube.com/watch?v=SrFXsjeGc6Q",
+      "kind": "video"
+    },
+    {
+      "id": "yt-sw3plfxfwj4",
+      "title": "",
+      "author": "Mark Pollack, Christian Tzolov, Josh Long, James Ward (Devoxx)",
+      "url": "https://www.youtube.com/watch?v=Sw3PlFXfWj4",
+      "kind": "video"
+    },
+    {
+      "id": "yt-tqc1qofivcq",
+      "title": "Claude Агент SDK [Полный мастер-класс]",
+      "author": "Thariq Shihipar",
+      "url": "https://www.youtube.com/watch?v=TqC1qOfiVcQ",
+      "kind": "video"
+    },
+    {
+      "id": "yt-upwgam2mkhy",
+      "title": "Журнал — это агент",
+      "author": "Ishaan Sehgal",
+      "url": "https://www.youtube.com/watch?v=UPwGaM2MKHY",
+      "kind": "video"
+    },
+    {
+      "id": "yt-wnx-s-rxvxk",
+      "title": "Я был скептиком по поводу ИИ. Затем я попробовал режим планирования",
+      "author": "Matt Pocock",
+      "url": "https://www.youtube.com/watch?v=WNx-s-RxVxk",
+      "kind": "video"
+    },
+    {
+      "id": "yt-wp3hjuxd918",
+      "title": "Контекстная инженерия в 2026 году",
+      "author": "Louis-François Bouchard, Omar Solano and Samridhi Vaid (Towards AI)",
+      "url": "https://www.youtube.com/watch?v=WP3hjUXd918",
+      "kind": "video"
+    },
+    {
+      "id": "yt-x9bai7rbhqk",
+      "title": "Агентские шаблоны ИИ",
+      "author": "Kevin Dubois and Mario Fusco (Devoxx)",
+      "url": "https://www.youtube.com/watch?v=X9baI7RBhqk",
+      "kind": "video"
+    },
+    {
+      "id": "yt-z-c11pv-uvu",
+      "title": "Экзамен CCA Anthropic как практическое руководство по агентной инженерии",
+      "author": "Frank Coyle",
+      "url": "https://www.youtube.com/watch?v=Z-c11pV_uvU",
+      "kind": "video"
+    },
+    {
+      "id": "yt-bzissg7h7da",
+      "title": "Вашим агентам нужна кнопка «Сохранить»",
+      "author": "Hamza Tahir",
+      "url": "https://www.youtube.com/watch?v=bZISsg7H7DA",
+      "kind": "video"
+    },
+    {
+      "id": "yt-hd9-v56fnri",
+      "title": "Агенты ИИ теперь являются просто распределенными системами",
+      "author": "Salman Munaf",
+      "url": "https://www.youtube.com/watch?v=hD9-V56FNRI",
+      "kind": "video"
+    },
+    {
+      "id": "yt-mr-waveprwe",
+      "title": "Семинар Anthropic: создание агентов, которые работают часами",
+      "author": "Ash Prabaker and Andrew Wilson",
+      "url": "https://www.youtube.com/watch?v=mR-WAvEPRwE",
+      "kind": "video"
+    },
+    {
+      "id": "yt-msfmqw92y8q",
+      "title": "Посмотрите это, если ваш агент кодирования игнорирует ваши правила (вам нужны хуки)",
+      "author": "Cole Medin",
+      "url": "https://www.youtube.com/watch?v=msfMqW92Y8Q",
+      "kind": "video"
+    },
+    {
+      "id": "yt-ow1we5pzk-o",
+      "title": "Многоагентная архитектура, которая действительно работает",
+      "author": "Luke Alvoeiro",
+      "url": "https://www.youtube.com/watch?v=ow1we5PzK-o",
+      "kind": "video"
+    },
+    {
+      "id": "yt-rbjwzzk2lu0",
+      "title": "Дайте агенту бюджет, а не токен",
+      "author": "Sachin Malhotra",
+      "url": "https://www.youtube.com/watch?v=rbjWzZK2LU0",
+      "kind": "video"
+    },
+    {
+      "id": "yt-utm3frgbun0",
+      "title": "Alfred le système Agentic AI de Doctolib au service des professionals de santé",
+      "author": "Goulven Le Dû (Doctolib)",
+      "url": "https://www.youtube.com/watch?v=uTM3fRgbUN0",
+      "kind": "video"
+    },
+    {
+      "id": "yt-vi-2nasppag",
+      "title": "Создайте свою собственную систему агентов на основе событий, используя потоковые процессоры.",
+      "author": "Jonas Templestein",
+      "url": "https://www.youtube.com/watch?v=vi-2nasppAg",
+      "kind": "video"
+    }
+  ],
+  "further_reading": [
+    {
+      "source": "osmani-2026",
+      "note": "19 апреля 2026 г. Каталог практик использования: Git как устойчивое состояние, уплотнение, навыки постепенного раскрытия, перехваты как уровень обеспечения соблюдения, разделение планировщика, генератора и оценщика, а также превращение каждой ошибки агента в постоянное правило.",
+      "patterns": [
+        "context-compaction",
+        "progressive-disclosure",
+        "deterministic-gate",
+        "evaluator-optimizer",
+        "goal-loop"
+      ]
+    },
+    {
+      "source": "bockeler-2026",
+      "note": "2 апреля 2026 г. Ментальная модель направляющих прямой связи и датчиков обратной связи, каждый из которых является вычислительным или логическим, с человеком, управляющим циклом.",
+      "patterns": [
+        "deterministic-gate",
+        "evaluator-optimizer"
+      ]
+    },
+    {
+      "source": "willison-agentic-patterns",
+      "note": "Руководство по практическим шаблонам для агентов кодирования: субагенты, red/green TDD, первый запуск тестов, ручное тестирование и антишаблоны.",
+      "patterns": [
+        "context-isolation",
+        "evaluator-optimizer"
+      ]
+    },
+    {
+      "source": "ng-2024",
+      "note": "Март 2024 г. Четыре шаблона агентного проектирования, которые популяризировали этот термин: размышление, использование инструментов, планирование и многоагентное сотрудничество.",
+      "patterns": [
+        "evaluator-optimizer",
+        "plan-then-execute",
+        "orchestrator-workers"
+      ]
+    },
+    {
+      "source": "huyen-2025",
+      "note": "Январь 2025 г. Использование инструментов, планирование и проверка плана, анализ, режимы сбоев и оценка агентов.",
+      "patterns": [
+        "plan-then-execute",
+        "evaluator-optimizer"
+      ]
+    },
+    {
+      "source": "weng-2023",
+      "note": "Июнь 2023 г. Декомпозиция планирования, памяти и использования инструментов, с которой начинается большинство более поздних каталогов.",
+      "patterns": [
+        "plan-then-execute",
+        "context-compaction"
+      ]
+    },
+    {
+      "source": "agents-best-practices",
+      "note": "Навык агента, лицензированный MIT, для проектирования и аудита программных средств, основанный на одном правиле: модель предлагает действия, система проверяет, авторизует, выполняет и записывает их.",
+      "patterns": [
+        "deterministic-gate",
+        "sidecar"
+      ]
+    },
+    {
+      "source": "awesome-agentic-system-design",
+      "note": "Лицензированный MIT центр чтения по оркестровке, контексту и памяти, инструментам и протоколам, оценке и безопасности производства.",
+      "patterns": [
+        "context-isolation",
+        "context-compaction"
+      ]
+    },
+    {
+      "source": "agentic-design-patterns-code",
+      "note": "Небольшие работоспособные реализации на языке Python таких шаблонов рабочих процессов, как цепочка, маршрутизация, распараллеливание, отражение и планирование, лицензированные MIT.",
+      "patterns": [
+        "pipes-and-filters",
+        "content-based-router",
+        "scatter-gather",
+        "evaluator-optimizer"
+      ]
+    }
+  ]
+}

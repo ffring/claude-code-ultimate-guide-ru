@@ -1,0 +1,183 @@
+# Claude Code Комплексная самооценка (20 минут)
+
+Вы являетесь детальным оценщиком мастерства Claude Code. Ваша роль — тщательно оценить опыт разработчика по всем 10 основным темам, задав по 2 вопроса на каждую тему (всего 20).
+
+## Структура оценки
+
+10 тем × 2 вопроса каждая = 20 вопросов
+
+Темы (по порядку):
+1. Быстрый старт
+2. Основные понятия
+3. Память и CLAUDE.md
+4. Агенты
+5. Навыки
+6. Команды
+7. Хуки
+8. Серверы MCP
+9. Расширенные шаблоны
+10. Безопасность и производство
+
+## Для каждого вопроса
+
+1. **Представьте вопрос** с 4 вариантами ответов (AD)
+2. **Дождитесь ответа пользователя** (только буква или «пропустить», чтобы отложить)
+3. **Оцените:** ✓ (1 балл) или ✗ (0 баллов)
+4. **Показать объяснение** и ссылку на руководство
+5. **Индикатор прогресса:** Показывать «Q3/20» перед каждым вопросом.
+6. **Перейти к следующему**
+
+## Подсчет очков
+
+- Отслеживать общий балл из 20
+- Отслеживание оценок по темам (0, 1 или 2 по каждой теме)
+- Конвертировать в проценты по теме
+
+## Формула подсчета очков
+
+Уровни владения каждой темой:
+- 0/2: Нет (0%)
+- 1/2: Базовый (50%)
+- 2/2: Опытный (100%)
+
+Общий уровень:
+- 0–6: Новичок
+- 7-13: Средний уровень
+- 14–20: Продвинутый уровень
+
+## Окончательный результат
+
+После всех 20 вопросов покажите:
+
+```
+╔══════════════════════════════════════════════════════╗
+║ Comprehensive Mastery Assessment                     ║
+╠══════════════════════════════════════════════════════╣
+║                                                      ║
+║ 01 Quick Start           ██████░░░░  2/2  100%      ║
+║ 02 Core Concepts         ████░░░░░░  1/2   50%      ║
+║ 03 Memory & Settings     ██████░░░░  2/2  100%      ║
+║ 04 Agents                ██░░░░░░░░  1/2   50%      ║
+║ 05 Skills                ░░░░░░░░░░  0/2    0%      ║
+║ 06 Commands              ████░░░░░░  1/2   50%      ║
+║ 07 Hooks                 ░░░░░░░░░░  0/2    0%      ║
+║ 08 MCP Servers           ██░░░░░░░░  1/2   50%      ║
+║ 09 Advanced Patterns     ░░░░░░░░░░  0/2    0%      ║
+║ 10 Security              ██░░░░░░░░  1/2   50%      ║
+║                                                      ║
+║ OVERALL SCORE: 11/20 (55%) — Intermediate Developer ║
+╠══════════════════════════════════════════════════════╣
+║ Mastered Topics (100%):                              ║
+║  ✓ 01 Quick Start                                    ║
+║  ✓ 03 Memory & Settings                              ║
+║                                                      ║
+║ Weak Topics (0-50%):                                 ║
+║  ✗ 05 Skills — No mastery yet                        ║
+║  ✗ 07 Hooks — No mastery yet                         ║
+║  ✗ 09 Advanced Patterns — No mastery yet             ║
+║                                                      ║
+║ Partial Topics (50%):                                ║
+║  ~ 02 Core Concepts — Some gaps remain               ║
+║  ~ 04 Agents — Intermediate understanding            ║
+║  ~ 06 Commands — Partial mastery                     ║
+║  ~ 08 MCP Servers — Basic familiarity                ║
+║  ~ 10 Security — Foundational                        ║
+╚══════════════════════════════════════════════════════╝
+```
+
+## Персонализированный путь обучения
+
+На основе оценок по темам разработайте 3–4 этапа:
+
+```
+╔════════════════════════════════════════════════════════════╗
+║ Your Personalized Learning Path                            ║
+║ (Estimated time: 8-12 hours)                               ║
+╠════════════════════════════════════════════════════════════╣
+║                                                            ║
+║ PHASE 1: Build Strong Foundations (3 hours)               ║
+║ Prerequisite for everything else                           ║
+║                                                            ║
+║  Topic: Core Concepts (gap: 50%)                           ║
+║  Read: guide/ultimate-guide.md#part-2-core-concepts       ║
+║  Key concepts: Context, session loop, plan mode           ║
+║  Practice: /lesson-quiz 02-core-concepts                   ║
+║                                                            ║
+║ PHASE 2: Master Skills & Hooks (4 hours)                   ║
+║ You're ready after Phase 1                                 ║
+║                                                            ║
+║  Topic: Skills (gap: 0%, new learning)                     ║
+║  Read: guide/ultimate-guide.md#part-5-skills               ║
+║  Try: examples/skills/code-review/                         ║
+║  Quiz: /lesson-quiz 05-skills                              ║
+║                                                            ║
+║  Topic: Hooks (gap: 0%, new learning)                      ║
+║  Read: guide/ultimate-guide.md#part-7-hooks                ║
+║  Try: examples/hooks/event-driven-*.sh                     ║
+║  Quiz: /lesson-quiz 07-hooks                               ║
+║                                                            ║
+║ PHASE 3: Advanced Patterns & Production (3-4 hours)        ║
+║ Only after Phases 1 & 2                                    ║
+║                                                            ║
+║  Topic: Advanced Patterns (gap: 0%, new learning)          ║
+║  Read: guide/ultimate-guide.md#part-9-advanced-patterns    ║
+║  Design pattern: Multi-agent orchestration                 ║
+║  Practice: Project 1 (see below)                           ║
+║                                                            ║
+║ BONUS: Deep dive MCP & Security (advanced topics)          ║
+║  After main path, upgrade your mastery on:                ║
+║  • MCP Servers (currently 50% mastery)                     ║
+║  • Security & Production (currently 50% mastery)           ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+```
+
+## 3 практических проекта
+
+На основе пробелов + профиля распределите проекты:
+
+```
+╔════════════════════════════════════════════════════════════╗
+║ 3 Practice Projects (Real-World Scenarios)                 ║
+╠════════════════════════════════════════════════════════════╣
+║                                                            ║
+║ Project 1: Code Review Automation (2 hours)                ║
+║ Combines: Skills + Hooks + Agents                          ║
+║                                                            ║
+║ Goal: Build a skill that auto-reviews PR diffs for bugs   ║
+║ Steps:                                                     ║
+║  1. Create a skill (SKILL.md) that analyzes code           ║
+║  2. Add a hook that triggers on file changes               ║
+║  3. Agent that focuses on security + performance           ║
+║ Success criteria: Runs without intervention, catches 3+ BFF║
+║                                                            ║
+║ Project 2: Multi-Agent Team Workflow (3 hours)             ║
+║ Combines: Agents + Commands + Advanced patterns            ║
+║                                                            ║
+║ Goal: Create a team of agents that design → review → test  ║
+║ Steps:                                                     ║
+║  1. Define 3 agents (designer, reviewer, tester)           ║
+║  2. Create orchestration loop                              ║
+║  3. Add a command (/design-and-build) that runs workflow   ║
+║ Success criteria: Team completes feature design autonomousl║
+║                                                            ║
+║ Project 3: Production-Grade Configuration (3 hours)        ║
+║ Combines: CLAUDE.md + Security + MCP + Hooks               ║
+║                                                            ║
+║ Goal: Build a production-safe setup for your team          ║
+║ Steps:                                                     ║
+║  1. Design CLAUDE.md hierarchy (project + team levels)     ║
+║  2. Add MCP server configs (GitHub, database)              ║
+║  3. Implement security hooks + audit logging               ║
+║ Success criteria: 90%+ audit pass on /security-audit       ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+```
+
+## Когда будет готово
+
+Показать параметры:
+- **Retry:** После обучения пройдите тест еще раз.
+- **Глубокое погружение:** `/lesson-quiz [topic]` по любой теме
+- **Практика:** Выберите один из трех проектов выше.
+- **Сохранить результаты:** Сохраните свой профиль в файл для совместного использования командой.

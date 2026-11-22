@@ -1,0 +1,360 @@
+---
+title: "Claude Code: Диаграммы рабочих процессов разработки"
+description: "TDD, спецификации в первую очередь, на основе плана, уточнение, наблюдаемое поведение ИИ и объяснение смены агента."
+tags: [workflows, tdd, spec-first, plan-driven, iterative]
+---
+
+# Рабочие процессы разработки
+
+Методы структурирования разработки с помощью ИИ. Их этапы проверки устанавливают только фактически проверяемое поведение и область действия.
+
+---
+
+### TDD красно-зеленый рефакторинг с Claude
+
+Напишите тест поведения, посмотрите, почему он терпит неудачу, реализуйте запрошенное поведение, затем выполните рефакторинг, сохраняя при этом флажки зелеными. Пройденный тест доказывает только его утверждения. Подтвердите, что функция еще не присутствует, когда новый тест пройдет перед реализацией, и отличайте ожидаемые сбои от ошибок настройки.
+
+```mermaid
+flowchart TD
+    START["New behavior requested"] --> TEST["Write behavior test<br/>with explicit assertions"]
+    TEST --> RUN["Run test"]
+    RUN --> WHY{"Observed result?"}
+    WHY -->|Already passes| EXISTS["Check existing behavior<br/>or strengthen assertions"]
+    EXISTS --> TEST
+    WHY -->|Setup error| SETUP["Repair test environment"]
+    SETUP --> RUN
+    WHY -->|Expected behavior failure| IMPL["Claude implements<br/>minimal behavior"]
+    IMPL --> CHECK["Run behavior and regression tests"]
+    CHECK --> PASS{"Checks pass?"}
+    PASS -->|No| FIX["Diagnose and fix"]
+    FIX --> CHECK
+    PASS -->|Yes| REFACTOR{"Refactor needed?"}
+    REFACTOR -->|Yes| CLEAN["Refactor and rerun checks"]
+    CLEAN --> CHECK
+    REFACTOR -->|No| REVIEW["Review assertions and change<br/>Verified for tested scope"]
+    classDef default fill:#F5E6D3,color:#333,stroke:#E87E2F
+    click START href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/tdd-with-claude.md" "View this pattern in the guide"
+    click TEST href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/tdd-with-claude.md" "View this pattern in the guide"
+    click RUN href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/tdd-with-claude.md" "View this pattern in the guide"
+    click WHY href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/tdd-with-claude.md" "View this pattern in the guide"
+    click EXISTS href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/tdd-with-claude.md" "View this pattern in the guide"
+    click SETUP href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/tdd-with-claude.md" "View this pattern in the guide"
+    click IMPL href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/tdd-with-claude.md" "View this pattern in the guide"
+    click CHECK href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/tdd-with-claude.md" "View this pattern in the guide"
+    click PASS href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/tdd-with-claude.md" "View this pattern in the guide"
+    click FIX href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/tdd-with-claude.md" "View this pattern in the guide"
+    click REFACTOR href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/tdd-with-claude.md" "View this pattern in the guide"
+    click CLEAN href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/tdd-with-claude.md" "View this pattern in the guide"
+    click REVIEW href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/tdd-with-claude.md" "View this pattern in the guide"
+```
+
+<details>
+<summary>ASCII версия</summary>
+
+```
+Write behavior test → run it
+├─ Passes already → existing behavior? strengthen assertions if needed
+├─ Setup failure  → fix environment, rerun
+└─ Expected failure (RED) → implement minimal behavior
+                            → run behavior + regression tests
+                            ├─ Fail → diagnose and fix
+                            └─ Pass (GREEN) → refactor if needed
+                                              → rerun checks
+                                              → review tested scope
+```
+
+</details>
+
+> **Source**: [Guide: TDD красно-зеленый рефакторинг с Claude](../workflows/tdd-with-claude.md); [Критерии проверки](https://code.claude.com/docs/en/best-practices)
+
+---
+
+### <a name="spec-first-development-pipeline"></a>Конвейер разработки Spec-First
+
+Спецификация помогает сравнить предполагаемое поведение с реализацией; это не гарантирует, что дрейф невозможен. Цикл обслуживания представляет собой настроенный шаблон автоматизации: детерминированный триггер вызывает Claude, владелец оценивает полученное намерение, а изменения проходят проверку и развертывание. Claude Code не запускает этот цикл мониторинга только потому, что существует файл спецификации.
+
+```mermaid
+flowchart TD
+    IDEA["Requirement"] --> INTENT["Write intent.md<br/>Problem, owner and constraints"]
+    INTENT --> IA{"Intent approved by owner?"}
+    IA -->|No| INTENT
+    IA -->|Yes| SPEC["Write and clarify spec.md"]
+    SPEC --> SA{"Human approves spec?"}
+    SA -->|No| SPEC
+    SA -->|Yes| TESTS["Generate behavior tests"]
+    TESTS --> IMPL["Implement from spec and tests"]
+    IMPL --> RUN["Run checks"]
+    RUN --> PASS{"Checks pass?"}
+    PASS -->|No| IMPL
+    PASS -->|Yes| REVIEW{"Human review matches spec?"}
+    REVIEW -->|No| FIX["Revise spec or implementation"]
+    FIX --> RUN
+    REVIEW -->|Yes| MERGE["Merge after review"]
+    MERGE --> DEPLOY["Deployment gate and runtime checks"]
+    DEPLOY --> MON["Configured monitoring<br/>Deterministic trigger"]
+    MON --> BREACH{"Threshold crossed?"}
+    BREACH -->|No| MON
+    BREACH -->|Yes| DRAFT["Claude drafts intent.md"]
+    DRAFT --> TRIAGE{"Service owner or on-call triages"}
+    TRIAGE -->|Fix or schedule| INTENT
+    TRIAGE -->|Dismiss| MON
+    classDef default fill:#F5E6D3,color:#333,stroke:#E87E2F
+    click IDEA href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click INTENT href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click IA href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click SPEC href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click SA href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click TESTS href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click IMPL href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click RUN href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click PASS href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click REVIEW href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click FIX href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click MERGE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click DEPLOY href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click MON href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click BREACH href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click DRAFT href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+    click TRIAGE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/spec-first.md" "View this pattern in the guide"
+```
+
+<details>
+<summary>ASCII версия</summary>
+
+```
+Requirement → owner-approved intent → human-approved spec
+            → tests → implementation → checks
+                           ↑             │ fail
+                           └─────────────┘
+Checks pass → human compares spec/output
+├─ Mismatch → revise spec or code, rerun checks
+└─ Match → review/merge → deployment gate + runtime checks
+                          → configured monitoring
+                          ├─ No threshold breach → continue
+                          └─ Breach → Claude drafts intent
+                                      → owner/on-call triage
+                                      ├─ Fix/schedule → intent loop
+                                      └─ Dismiss → monitoring
+```
+
+</details>
+
+> **Источник**: [Guide: конвейер разработки Spec-First](../workflows/spec-first.md); [Anthropic Сборник сценариев SDLC с поддержкой искусственного интеллекта](https://claude.com/resources/articles/the-ai-native-sdlc-playbook)
+
+---
+
+### Плановый рабочий процесс с аннотациями
+
+Используйте режим «План», чтобы отделить исследование от изменений исходного кода. Нажимайте клавиши Shift+Tab, пока статус не укажет «План», или запустите план с --permission-mode; количество нажатий клавиш зависит от стартового режима. Просмотрите план, аннотируйте его, а затем проверьте его реализацию. Этот рабочий процесс является дисциплиной проверки, а не гарантией того, что каждое действие будет соответствовать плану.
+
+```mermaid
+flowchart TD
+    TASK["Task needs exploration"] --> PLAN["Enter Plan mode<br/>Shift+Tab until Plan<br/>or --permission-mode plan"]
+    PLAN --> EXPLORE["Explore code and requirements"]
+    EXPLORE --> DRAFT["Draft plan with files and checks"]
+    DRAFT --> HUMAN{"Human accepts plan?"}
+    HUMAN -->|No| ANNOTATE["Annotate gaps<br/>Ctrl+G to edit plan"]
+    ANNOTATE --> DRAFT
+    HUMAN -->|Yes| EXEC["Approve and leave Plan mode<br/>Implement steps"]
+    EXEC --> ISSUE{"Scope or assumption changed?"}
+    ISSUE -->|Yes| HUMAN
+    ISSUE -->|No| VERIFY["Run relevant checks<br/>and compare change to plan"]
+    VERIFY --> DONE{"Evidence meets criteria?"}
+    DONE -->|No| EXEC
+    DONE -->|Yes| END["Report result and evidence limits"]
+    classDef default fill:#F5E6D3,color:#333,stroke:#E87E2F
+    click TASK href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/plan-driven.md" "View this pattern in the guide"
+    click PLAN href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/plan-driven.md" "View this pattern in the guide"
+    click EXPLORE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/plan-driven.md" "View this pattern in the guide"
+    click DRAFT href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/plan-driven.md" "View this pattern in the guide"
+    click HUMAN href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/plan-driven.md" "View this pattern in the guide"
+    click ANNOTATE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/plan-driven.md" "View this pattern in the guide"
+    click EXEC href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/plan-driven.md" "View this pattern in the guide"
+    click ISSUE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/plan-driven.md" "View this pattern in the guide"
+    click VERIFY href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/plan-driven.md" "View this pattern in the guide"
+    click DONE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/plan-driven.md" "View this pattern in the guide"
+    click END href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/plan-driven.md" "View this pattern in the guide"
+```
+
+<details>
+<summary>ASCII версия</summary>
+
+```
+Task → Plan mode (Shift+Tab until Plan, or --permission-mode plan)
+     → explore → propose plan → human review
+                                 ├─ Revise → annotate, redraft
+                                 └─ Accept → approve and implement
+                                             ├─ Scope changed → review again
+                                             └─ Run checks + compare to plan
+                                                 → report evidence and limits
+```
+
+</details>
+
+> **Source**: [Guide: Плановый рабочий процесс с аннотациями](../workflows/plan-driven.md); [Исследовать, планировать, реализовывать](https://code.claude.com/docs/en/best-practices)
+
+---
+
+### <a name="iterative-refinement-loop"></a>Итеративный цикл уточнения
+
+Используйте конкретную обратную связь, сравнивайте версии и останавливайтесь, когда выполняются явные критерии. Внешний вид и удовлетворение сами по себе не определяют фактическую правильность; выполнить проверки, соответствующие выходным данным.
+
+```mermaid
+flowchart TD
+    PROMPT["Request with criteria"] --> OUTPUT["Claude produces output"]
+    OUTPUT --> EVAL["Compare with criteria<br/>and run relevant checks"]
+    EVAL --> GOOD{"Criteria met?"}
+    GOOD -->|Yes| DONE["Report result and tested scope"]
+    GOOD -->|No| ISSUE["Identify the specific gap"]
+    ISSUE --> TYPE{"What needs changing?"}
+    TYPE -->|Style or length| STYLE["Specify output constraints"]
+    TYPE -->|Missing context| CONTEXT["Provide required information"]
+    TYPE -->|Wrong approach| APPROACH["Revisit assumptions and approach"]
+    STYLE --> REVISE["Claude revises output"]
+    CONTEXT --> REVISE
+    APPROACH --> REVISE
+    REVISE --> COMPARE["Compare before and after"]
+    COMPARE --> BETTER{"Evidence of improvement?"}
+    BETTER -->|Yes| EVAL
+    BETTER -->|No| ISSUE
+    classDef default fill:#F5E6D3,color:#333,stroke:#E87E2F
+    click PROMPT href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/iterative-refinement.md" "View this pattern in the guide"
+    click OUTPUT href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/iterative-refinement.md" "View this pattern in the guide"
+    click EVAL href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/iterative-refinement.md" "View this pattern in the guide"
+    click GOOD href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/iterative-refinement.md" "View this pattern in the guide"
+    click DONE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/iterative-refinement.md" "View this pattern in the guide"
+    click ISSUE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/iterative-refinement.md" "View this pattern in the guide"
+    click TYPE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/iterative-refinement.md" "View this pattern in the guide"
+    click STYLE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/iterative-refinement.md" "View this pattern in the guide"
+    click CONTEXT href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/iterative-refinement.md" "View this pattern in the guide"
+    click APPROACH href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/iterative-refinement.md" "View this pattern in the guide"
+    click REVISE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/iterative-refinement.md" "View this pattern in the guide"
+    click COMPARE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/iterative-refinement.md" "View this pattern in the guide"
+    click BETTER href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/iterative-refinement.md" "View this pattern in the guide"
+```
+
+<details>
+<summary>ASCII версия</summary>
+
+```
+Request + criteria → output → evaluate and run relevant checks
+                              ├─ Criteria met → report tested scope
+                              └─ Gap → specific feedback
+                                        ├─ Style/length constraints
+                                        ├─ Missing context
+                                        └─ Different approach
+                                        → revision → compare
+                                          ├─ Better → evaluate again
+                                          └─ No gain → revisit gap
+```
+
+</details>
+
+> **Source**: [Guide: Итеративный цикл уточнения](../workflows/iterative-refinement.md); [Предоставить подтверждение и контекст](https://code.claude.com/docs/en/best-practices)
+
+---
+
+### <a name="ai-fluency-observed-collaboration-behaviors"></a>Свободное владение искусственным интеллектом: наблюдаемое поведение при совместной работе
+
+Anthropic изучил 9830 разговоров на Claude.ai. Итерация появилась в 85,7% выборки. Итеративные разговоры в 5,6 раз чаще показывали, что пользователи подвергают сомнению рассуждения, при этом 2,67 против 1,33 дополнительных вариантов беглого поведения. В разговорах об артефактах вопросы по выявлению недостающего контекста, проверке фактов и рассуждениям встречались реже на 5,2, 3,7 и 3,1 процентных пункта. Это ассоциации между поведением в разговоре, а не измеренное обнаружение ошибок или доказательство того, что отточенный результат вызывает предвзятость принятия.
+
+```mermaid
+flowchart TD
+    SAMPLE["9,830 sampled conversations<br/>Observational study"] --> ITER["Comparison 1:<br/>Iteration observed vs absent"]
+    SAMPLE --> ART["Comparison 2:<br/>Artifact vs non-artifact"]
+    ITER --> PREV["85.7% show iteration"]
+    ITER --> REASON["Reasoning questioned<br/>5.6x as likely with iteration"]
+    ITER --> BEHAVIOR["Additional fluency behaviors<br/>2.67 vs 1.33 on average"]
+    ART --> DISCERN["Artifact conversations:<br/>missing-context identification -5.2pp<br/>fact-checking -3.7pp<br/>reasoning questions -3.1pp"]
+    PREV --> LIMIT["Associations, not causality<br/>No measured defect-catch multiplier"]
+    REASON --> LIMIT
+    BEHAVIOR --> LIMIT
+    DISCERN --> LIMIT
+    LIMIT --> PRACTICE["Practice recommendation:<br/>question assumptions and verify<br/>with independent evidence"]
+    classDef default fill:#F5E6D3,color:#333,stroke:#E87E2F
+    click SAMPLE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/ultimate-guide.md#911-common-pitfalls--best-practices" "View this pattern in the guide"
+    click ITER href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/ultimate-guide.md#911-common-pitfalls--best-practices" "View this pattern in the guide"
+    click ART href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/ultimate-guide.md#911-common-pitfalls--best-practices" "View this pattern in the guide"
+    click PREV href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/ultimate-guide.md#911-common-pitfalls--best-practices" "View this pattern in the guide"
+    click REASON href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/ultimate-guide.md#911-common-pitfalls--best-practices" "View this pattern in the guide"
+    click BEHAVIOR href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/ultimate-guide.md#911-common-pitfalls--best-practices" "View this pattern in the guide"
+    click DISCERN href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/ultimate-guide.md#911-common-pitfalls--best-practices" "View this pattern in the guide"
+    click LIMIT href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/ultimate-guide.md#911-common-pitfalls--best-practices" "View this pattern in the guide"
+    click PRACTICE href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/ultimate-guide.md#911-common-pitfalls--best-practices" "View this pattern in the guide"
+```
+
+<details>
+<summary>ASCII версия</summary>
+
+```
+9,830 sampled conversations (observational)
+├─ Iteration observed vs absent
+│  ├─ 85.7% show iteration
+│  ├─ Questioning reasoning: 5.6x as likely with iteration
+│  └─ Additional fluency behaviors: 2.67 vs 1.33 average
+└─ Artifact vs non-artifact conversations
+   ├─ Missing-context identification: -5.2 percentage points
+   ├─ Fact-checking: -3.7 percentage points
+   └─ Reasoning questions: -3.1 percentage points
+
+Association does not establish causality or defects caught.
+Recommendation: question assumptions, then verify with evidence.
+```
+
+</details>
+
+> **Источник**: [Руководство: Свободное владение искусственным интеллектом: наблюдаемое поведение при совместной работе](../ultimate-guide.md#911-common-pitfalls--best-practices); [Anthropic Индекс беглости AI](https://academy.claude.com/tutorials/the-ai-fluency-index)
+
+---
+
+### <a name="three-places-an-agent-change-gets-explained"></a>Три места, где объясняется смена агента
+
+Изменение агента может быть объяснено самим агентом, пошаговым руководством, созданным постфактум на основе различий, или ботом-проверкой после отправки. Названные инструменты являются примерами, прочитанными для этого руководства, а не рекомендациями, и ни один из них не сообщает об измеренном влиянии на качество обзора.
+
+```mermaid
+flowchart LR
+    subgraph W [Written by the agent]
+        W1[Agent edits code] --> W2[Agent records its rationale<br/>while editing: glassbox<br/>in session or at review: diffo, hunk]
+    end
+    subgraph L [Local review surface]
+        L1[Diff with the notes] --> L2{Reviewer feedback}
+    end
+    subgraph C [CI review bots]
+        C1[Push or merge request] --> C2[Bot comments on the diff]
+    end
+    A1[Walkthrough generated after the fact<br/>ai-pr-review, guidedreview] --> L1
+    W2 --> L1
+    L2 -->|Question or requested change| W1
+    L2 -->|Ready for the forge| C1
+    C2 --> H([Human merge decision])
+
+    classDef diagramNode fill:#F5E6D3,color:#333,stroke:#A64B00
+    class W1,W2,L1,L2,C1,C2,A1,H diagramNode
+    click W1 href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/multi-provider-code-review.md#local-review-surfaces-for-agent-written-changes" "View in guide"
+    click W2 href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/multi-provider-code-review.md#local-review-surfaces-for-agent-written-changes" "View in guide"
+    click L1 href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/multi-provider-code-review.md#local-review-surfaces-for-agent-written-changes" "View in guide"
+    click L2 href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/multi-provider-code-review.md#local-review-surfaces-for-agent-written-changes" "View in guide"
+    click C1 href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/multi-provider-code-review.md#local-review-surfaces-for-agent-written-changes" "View in guide"
+    click C2 href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/multi-provider-code-review.md#local-review-surfaces-for-agent-written-changes" "View in guide"
+    click A1 href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/multi-provider-code-review.md#local-review-surfaces-for-agent-written-changes" "View in guide"
+    click H href "https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/workflows/multi-provider-code-review.md#local-review-surfaces-for-agent-written-changes" "View in guide"
+```
+
+<details>
+<summary>ASCII версия</summary>
+
+```text
+Written by the agent     agent edits code -> records its rationale (while editing: glassbox; in session or at review: diffo, hunk)
+                                                  |
+After the fact           walkthrough from the diff (ai-pr-review, guidedreview)
+                                                  |
+Local review surface     diff with the notes -> reviewer feedback
+                           question or requested change -> back to the agent
+                           ready -> push or merge request
+                                                  |
+CI review bots           bot comments on the diff -> human merge decision
+```
+
+</details>
+
+> **Источник**: [Локальные поверхности проверки изменений, написанных агентом](../workflows/multi-provider-code-review.md#local-review-surfaces-for-agent-written-changes)

@@ -1,0 +1,82 @@
+---
+title: "Commandes Essentielles"
+subtitle: "Raccourcis clavier & commandes slash indispensables"
+card-number: "T01"
+category: "Technique"
+guide-version: "3.44.1"
+difficulty: "beginner"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+wp-version: "1.1.4"
+date: "2026-10-27"
+layout: "two-col"
+lang: fr
+format:
+  recap-card-typst: default
+---
+
+## Raccourcis clavier
+
+| Raccourci | Action |
+|-----------|--------|
+| `Cmd+Esc` / `Ctrl+Esc` | Lancer depuis VS Code ou Cursor |
+| `Shift+Tab` | Parcourir les modes de permission ; démarrage en auto depuis v2.1.283 sauf réglage contraire |
+| `Shift+Enter` | Nouvelle ligne |
+| `Ctrl+C` | Interrompre (au repos : vide la saisie) |
+| `Ctrl+R` | Rechercher dans l'historique |
+| `Ctrl+B` | Tâches en arrière-plan |
+| `Alt+T` | Thinking si permis, sauf Opus/Sonnet/Haiku 5.5 et Fable |
+| `Esc` ; `Esc` × 2 | Interrompre ou fermer un dialogue ; menu de rewind |
+| `↑` / `↓` ; `Tab` | Historique ; accepter l'autocomplétion |
+| `Ctrl+X Ctrl+K` | Arrêter les sous-agents en arrière-plan |
+| `Ctrl+Enter` / `Ctrl+X Ctrl+S` | Envoyer les messages en attente |
+
+## Permissions et démarrage
+
+```bash
+claude                    # Interactif
+claude --continue         # Dernière session
+claude -p "Analyse" < input.txt
+claude --allowedTools "Edit,Read,Bash"
+claude --dangerously-skip-permissions
+```
+
+`--allowedTools` préautorise ; `--tools` limite les outils disponibles. Le bypass supprime les demandes de permission et nécessite un environnement isolé.
+
+`CLAUDE.md` se charge au démarrage. Pour ajouter un fichier en session : `@src/auth.ts Regarde cette fonction`. `@fichier` référence son contenu dans le prompt.
+
+```{=typst}
+#colbreak()
+```
+
+## Commandes slash
+
+| Commande | Action |
+|----------|--------|
+| `/help` ; `/powerup` | Aide ; leçons interactives animées |
+| `/clear` ; `/new` | Réinitialiser la conversation ; alias |
+| `/compact` | Résumer l'historique et libérer du contexte |
+| `/model` | Choisir : Entrée enregistre, s = session |
+| `/status` ; `/context` | Onglet Status (version, modèle, compte) ; répartition du contexte |
+| `/usage` ; `/cost` | Coût, limites du forfait, stats ; alias |
+| `/plan` | Planifier sans modifier l'implémentation |
+| `/recap` | Résumé d'une ligne de la session |
+| `/undo` | Alias `/rewind`, checkpoint |
+| `/ultrareview` | Revue multi-agent dans le cloud |
+| `/branch` | Créer une branche de la conversation ici |
+| `/rename [nom]` | Nommer la session |
+| `/resume` | Sélecteur de sessions à reprendre |
+| `/voice` | Saisie vocale |
+| `/fast` | Opus 5.5 fast : $8/$40 par MTok |
+
+`/effort` : `low`, `medium`, `high`, `xhigh`, `max`. `/loop [int] [prompt]` (skill intégré) relance un prompt en boucle, par exemple `/loop 5m check deploy`.
+
+## Commandes personnalisées
+
+Invoquer `/nom-commande [args]`. Définir le skill dans `.claude/skills/nom-commande/SKILL.md`.
+
+## Affichage et édition
+
+`--verbose` au lancement ou `Ctrl+O` en session affiche le transcript détaillé. `Shift+Enter` insère une ligne sans envoyer.
+
+Vim : `/config` → Editor mode, ou `{"editorMode": "vim"}` dans `~/.claude/settings.json`. `/vim` a été supprimé en v2.1.92.

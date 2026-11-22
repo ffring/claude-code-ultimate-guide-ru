@@ -1,0 +1,49 @@
+name: Rebuild Guide Exports (PDF + EPUB)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Render reviewed guide exports
+        id: exports
+        uses: ./.github/actions/render-guide-exports
+
+      - name: Read version
+        id: version
+        run: echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Update GitHub Release
+        if: github.event_name == 'workflow_dispatch' && steps.exports.outputs.languages == 'all'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: guide-export-v${{ steps.version.outputs.version }}
+          name: "Claude Code Ultimate Guide: EN/FR PDF & EPUB v${{ steps.version.outputs.version }}"
+          body: |
+            English and French full guides, generated from the maintained Markdown sources.
+            The build requires the French translation to match its recorded English source.
+
+            | Format | Download |
+            |--------|----------|
+            | **PDF EN** | [guide-export.pdf](https://github.com/FlorianBruniaux/claude-code-ultimate-guide/releases/latest/download/guide-export.pdf) |
+            | **EPUB EN** | [guide-export.epub](https://github.com/FlorianBruniaux/claude-code-ultimate-guide/releases/latest/download/guide-export.epub) |
+            | **PDF FR** | [guide-export-fr.pdf](https://github.com/FlorianBruniaux/claude-code-ultimate-guide/releases/latest/download/guide-export-fr.pdf) |
+            | **EPUB FR** | [guide-export-fr.epub](https://github.com/FlorianBruniaux/claude-code-ultimate-guide/releases/latest/download/guide-export-fr.epub) |
+
+            Built with Quarto + Typst through `scripts/render-publications.py`.
+          files: |
+            dist/publications/guides/en/guide-export.pdf
+            dist/publications/guides/en/guide-export.epub
+            dist/publications/guides/fr/guide-export-fr.pdf
+            dist/publications/guides/fr/guide-export-fr.epub
+          make_latest: "true"

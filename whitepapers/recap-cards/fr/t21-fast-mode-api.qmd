@@ -1,0 +1,63 @@
+---
+title: "Fast Mode & API Breaking Changes"
+subtitle: "Le mode rapide et les changements API majeurs à connaître"
+card-number: "T21"
+category: "Technique"
+difficulty: "intermediate"
+guide-version: "3.44.1"
+wp-version: "1.0.3"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-11-11"
+layout: "two-col"
+lang: fr
+format:
+  recap-card-typst: default
+---
+
+## Fast mode sur Fable 5.2 et Opus 5.5
+
+Le [fast mode](https://code.claude.com/docs/en/fast-mode) accélère le même modèle, jusqu'à 2,5 fois selon Anthropic. Fable 5.2 requiert Claude Code v2.1.321+, Opus 5.5 v2.1.280+.
+
+| API Anthropic, $/MTok entrée/sortie | Standard | Fast |
+|------------------------------------|----------|------|
+| Fable 5.2 | $8/$40 | $16/$80 |
+| Opus 5.5 | $4/$20 | $8/$40 |
+
+Opus 5 et 4.8 sont en aperçu à $10/$50. Fast mode sur Opus 4.8, déprécié depuis le 30 octobre, sera retiré le 30 novembre 2026. Sonnet et Haiku ne le proposent pas.
+
+## Activation et facturation
+
+Utiliser `/fast` ou `Option+O` / `Alt+O`. Le choix persiste normalement entre les sessions, sous réserve des règles de l'organisation et de la disponibilité. Avec un abonnement, fast mode consomme des crédits d'usage.
+
+Comparer latence et coût sur une même tâche. Une sortie plus rapide ne supprime pas les attentes d'outils, les reprises ni la relecture. Sonnet 5.5 standard coûte $2/$10, soit quatre fois moins qu'Opus 5.5 fast à nombre de tokens égal.
+
+```{=typst}
+#colbreak()
+```
+
+## Intégration API
+
+Consulter les [instructions API fast mode](https://platform.claude.com/docs/en/build-with-claude/fast-mode) pour les modèles, en-têtes, paramètres et règles de repli actuels. Vérifier la compatibilité du SDK avant de reprendre un ancien exemple bêta.
+
+Pour le raisonnement adaptatif :
+
+```python
+response = client.messages.create(
+    model="claude-opus-5-5",
+    max_tokens=16000,
+    thinking={"type": "adaptive"},
+    output_config={"effort": "high"},
+    messages=[{"role": "user", "content": "Review this design."}],
+)
+```
+
+Cet exemple utilise la vitesse standard. Opus 5.5 démarre à medium dans Claude Code ; ici, high est demandé explicitement.
+
+## Migrer les anciens exemples
+
+Opus 4.6 a supprimé le préremplissage assistant. Pour du JSON contraint par un schéma, utiliser `output_config.format`. Pour les arguments d'outils, placer `strict: true` sur la définition de l'outil. Une consigne système seule ne garantit pas un JSON valide.
+
+Les Opus actuels, Sonnet 5.5, Haiku 5.5 et Fable utilisent le thinking adaptatif. Les exemples avec `budget_tokens` fixe concernent d'anciens modèles. Haiku 4.5 (historique) n'a pas de paramètre effort.
+
+Vérifié le 11 novembre 2026. Sources : [Fast mode Claude Code](https://code.claude.com/docs/en/fast-mode), [sorties structurées](https://platform.claude.com/docs/en/build-with-claude/structured-outputs).

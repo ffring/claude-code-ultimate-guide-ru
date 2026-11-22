@@ -1,0 +1,56 @@
+# Question Template for Claude Code Knowledge Quiz
+#
+# Use this template to contribute new questions to the quiz.
+# Submit as a PR to: https://github.com/FlorianBruniaux/claude-code-ultimate-guide
+#
+# Guidelines:
+# - Test practical understanding, not memorization
+# - Make distractors plausible but clearly distinguishable
+# - Explanations should teach, not just state the correct answer
+# - Reference accurate sections from the guide
+#
+# Difficulty levels:
+# - junior: Basic commands, installation, simple concepts
+# - senior: Context management, configuration patterns, agent design
+# - power: Advanced orchestration, Trinity pattern, optimization
+#
+# Profile visibility:
+# - junior: Questions for new users (Day 1)
+# - senior: Questions for experienced developers (Week 1-2)
+# - power: Questions for advanced users (Month 1+)
+# - pm: Conceptual questions for non-technical stakeholders
+
+category: "Название категории" # One of: Quick Start, Core Concepts, Memory & Settings, Agents, Skills, Commands, Hooks, MCP Servers, Advanced Patterns, Reference
+category_id: 1             # 1-10 matching category
+
+questions:
+- id: "xx-001"             # Category prefix + unique number (qs=Quick Start, cc=Core Concepts, ms=Memory Settings, ag=Agents, sk=Skills, cm=Commands, hk=Hooks, mcp=MCP, ap=Advanced, rf=Reference)
+  difficulty: "junior"     # junior | senior | power
+  profiles: ["junior", "senior", "power", "pm"]    # Who sees this question
+  question: "Каковы рекомендуемые действия, когда использование контекста достигает 70 %?"
+  options:
+    a: "Продолжайте работать в обычном режиме"
+    b: "Используйте /compact для сжатия контекста."
+    c: "Используйте /clear для полного сброса"
+    d: "Выйдите и перезапустите Claude Code."
+  correct: "b"             # a | b | c | d
+  explanation: |
+    При использовании контекста 70 % (оранжевая зона) для подведения итогов следует использовать /compact.
+    разговор и освободить место, сохраняя при этом ключевой контекст.
+
+    /clear — более радикальный вариант, который полностью сбрасывает контекст, что
+    обычно требуется только при использовании 90%+ (зона red/critical).
+
+    Контекстные зоны:
+    - 0-50%: Зеленый (работает свободно)
+    - 50-70%: Желтый (будьте избирательны)
+    - 70-90%: Оранжевый (сейчас /compact)
+    - 90%+: Красный (требуется /clear)
+  doc_reference:
+    file: "guide/ultimate-guide.md"
+    section: "2.2 Управление контекстом"
+    anchor: "#22-context-management"
+
+  # Add more questions following this format...
+  # - id: "xx-002"
+  #   ...
