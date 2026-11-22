@@ -1,0 +1,104 @@
+---
+title: "Settings.json: Полная структура"
+subtitle: "Все ключи конфигурации и их область действия"
+card-number: "T06"
+category: "Технический"
+difficulty: "intermediate"
+guide-version: "3.44.1"
+wp-version: "1.0.2"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Иерархия файлов
+
+```
+~/.claude/settings.json         (global, all projects)
+        ↓ overridden by
+.claude/settings.json           (project, shared with team)
+        ↓ overridden by
+.claude/settings.local.json     (local machine, gitignore)
+```
+
+Локальные настройки проекта переопределяют настройки проекта и пользователя. Аргументы CLI и управляемая политика имеют более высокий приоритет. Используйте локальные настройки для личных переопределений без конфликтов Git.
+
+## Полная структура
+
+```json
+{
+  "model": "claude-sonnet-5-5",
+  "permissions": {
+    "allow": ["Bash(git *)", "Bash(pnpm *)", "Read"],
+    "deny":  ["Bash(rm -rf *)", "Write(*.env*)"],
+    "ask":   ["Bash(npm publish)"],
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": ["../shared-libs/"]
+  },
+  "env": {
+    "NODE_ENV": "development",
+    "LOG_LEVEL": "debug"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
+  },
+  "outputStyle": "Explanatory",
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": "Edit|Write",
+      "hooks": [{ "type": "command",
+                  "command": ".claude/hooks/format.sh" }]
+    }]
+  }
+}
+```
+
+## Доступные ключи
+
+| Ключ | Роль |
+|-----|------|
+| `model` | Модель по умолчанию |
+| `permissions.allow` | Автоматически одобренные инструменты |
+| `permissions.deny` | Заблокированные инструменты |
+| `permissions.ask` | Инструменты, требующие подтверждения |
+| `permissions.defaultMode` | Режим по умолчанию (default/acceptEdits/plan/auto/dontAsk/bypassPermissions) |
+| `permissions` → `additionalDirectories` | Дополнительные доступные каталоги |
+| `env` | Внедренные переменные среды |
+| `hooks` | Скрипты, запускаемые по событиям |
+| `statusLine` | Пользовательская строка статуса |
+| `outputStyle` | Стиль общения (Default/Proactive/Concise/Explanatory/Learning) |
+| `spinnerVerbs` | Слова в загрузочном счетчике |
+| `spinnerTipsOverride` | Советы, отображаемые во время обработки |
+| `enableAllProjectMcpServers` | Включает все серверы проекта MCP. |
+
+## Настройка спиннера
+
+```json
+{
+  "spinnerVerbs": {
+    "mode": "replace",
+    "verbs": ["Caffeinating…", "Thinking…", "Optimizing…"]
+  },
+  "spinnerTipsOverride": {
+    "tips": ["/compact when context is full"],
+    "excludeDefault": true
+  }
+}
+```
+
+`mode: "append"` расширяет список по умолчанию, а не заменяет его. Эти клавиши не имеют никакого функционального значения, только косметическое.
+
+## Что должно остаться в .gitignore
+
+```gitignore
+.claude/settings.local.json   # Local machine overrides
+CLAUDE.local.md              # Personal project instructions
+.env.local                    # Secrets
+```
+
+Файлы для фиксации (`settings.json`, `agents/`, `skills/`, `hooks/`, `rules/`) представляют собой общую конфигурацию команды. Никогда не включайте в эти файлы ключи или токены API.

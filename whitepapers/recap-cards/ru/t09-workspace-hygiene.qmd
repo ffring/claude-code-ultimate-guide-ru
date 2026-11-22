@@ -1,0 +1,84 @@
+---
+title: "Гигиена рабочего пространства"
+subtitle: "Поддержание чистоты контекста путем блокировки того, что Claude не должен читать."
+card-number: "T09"
+category: "Технический"
+difficulty: "beginner"
+guide-version: "3.44.1"
+wp-version: "1.0.1"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Нет .claudeignore
+
+Claude Code не имеет файла `.claudeignore` в форме `.gitignore`. Блокировка доступа к файлу осуществляется через `permissions.deny` в `.claude/settings.json` с использованием шаблонов прямого пути, таких как `Read(*.env*)`. Квалификатор `file_path:` недействителен для правил разрешений на чтение, редактирование и запись.
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(*.env*)",
+      "Edit(*.env*)",
+      "Write(*.env*)",
+      "Read(*.pem)",
+      "Read(*.key)",
+      "Read(*credentials*)",
+      "Bash(cat .env*)"
+    ]
+  }
+}
+```
+
+## Почему это важно
+
+`deny` имеет наивысший приоритет: никакое правило `allow` или `ask` в любой области действия не может его переопределить. Правило блокирует вызовы `Read`, `Edit`, `Write` и команды Bash, которые явно соответствуют шаблону запрета. Он не блокирует общие команды Bash без специального правила запрета или `ls .env*`, который показывает, что файл существует, не раскрывая его содержимое.
+
+## Что включает в себя Permissions.deny
+
+| Вектор | Заблокировано |
+|--------|---------|
+| `Read()` | Да |
+| `Edit()`/`Write()` с правилом | Да |
+| `Bash(cat .env)` с явным правилом | Да |
+| Общий Bash без правила запрета | Нет |
+| `ls .env*` (имя файла) | Частичный |
+
+Для глубокоэшелонированной защиты: храните секреты вне каталога проекта, добавьте хук PreToolUse в качестве второй блокировки, никогда не фиксируйте секреты, даже «заблокированные».
+
+## .gitignore против разрешений.deny
+
+| Механизм | Роль | Область применения |
+|-----------|------|-------|
+| `.gitignore` | Исключает из контроля версий | Гит |
+| `permissions.deny` | Блокирует reading/editing/writing с помощью инструментов | Claude Code |
+| `respectGitignore` (по умолчанию: `true`) | Средство выбора `@` учитывает шаблоны `.gitignore`. | Claude Code |
+
+Эти три механизма независимы. Файл может быть проигнорирован Git без блокировки для Claude, и наоборот.
+
+## Рекомендуемая структура папок .claude/
+
+```
+.claude/
+├── settings.json        # Team config (committed)
+├── settings.local.json  # Local config (gitignore)
+├── agents/              # Custom agents
+├── skills/               # Skills (includes slash commands since CC 2.1.3)
+├── hooks/                # Automation scripts
+└── rules/                # Shared conventions, optionally path-scoped
+```
+
+Папки `agents/`, `skills/`, `hooks/` и `rules/` включены в проект. `settings.local.json` и корень проекта `CLAUDE.local.md` содержат локальную конфигурацию и персональные инструкции. Автопамять живет под `~/.claude/projects/<project>/memory/`, отдельно от этого дерева.
+
+## Контрольный список чистоты рабочего места
+
+- `.env*`, `*.pem`, `*.key`, `*credentials*` в `permissions.deny`
+- Запретить правила, охватывающие чтение, редактирование, запись И эквивалентные команды Bash.
+- Секреты, хранящиеся вне каталога проекта, где это возможно.
+- `settings.local.json` в `.gitignore`
+- PreToolUse перехватчик в качестве второй блокировки критически важных файлов.

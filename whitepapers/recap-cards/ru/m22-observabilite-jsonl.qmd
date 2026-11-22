@@ -1,0 +1,108 @@
+---
+title: "Наблюдаемость: JSONL и jq"
+subtitle: "Аудит и анализ активности Claude Code через журналы"
+card-number: "M22"
+category: "Методология"
+difficulty: "advanced"
+guide-version: "3.44.1"
+wp-version: "1.0.1"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Реестр JSONL: источник истины
+
+Claude Code записывает разговоры и действия инструмента в локальных расшифровках JSONL, хранящихся в `~/.claude/projects/<project>/`. Они помогают восстановить активность, но записанные запросы инструментов не являются доказательством того, что каждый запрошенный эффект выполнен. Сопоставьте результаты инструмента и внешние журналы.
+
+```bash
+# Locate session files for the current project
+ls ~/.claude/projects/
+# Select the actual project directory; do not guess its encoding
+# → SESSION_ID.jsonl  SESSION_ID2.jsonl ...
+```
+
+Каждая строка типа `assistant` содержит массив `content`, записи `tool_use` которого документируют каждый вызов инструмента с его входными параметрами.
+
+## Какие инструменты выявляют
+
+| Инструмент | Доступная информация |
+|------|-----------------------|
+| `Read` | Путь к файлу, диапазон строк |
+| `Edit` / `Write` | Путь, измененный контент |
+| `Bash` | Полная команда выполнена |
+| `WebFetch` | Запрошенный URL-адрес и запрос на обработку |
+| `Agent` | Запрос отправлен субагенту |
+| `Glob` / `Grep` | Шаблоны и область поиска |
+
+## Основные запросы jq
+
+```bash
+SESSION=~/.claude/projects/-my-project-/SESSION.jsonl
+
+# Files read in the session
+jq 'select(.type=="assistant") |
+  .message.content[]? |
+  select(.type=="tool_use" and .name=="Read") |
+  .input.file_path' "$SESSION"
+
+# Bash commands executed
+jq 'select(.type=="assistant") |
+  .message.content[]? |
+  select(.type=="tool_use" and .name=="Bash") |
+  .input.command' "$SESSION"
+
+# Count by tool (activity profile)
+jq -r 'select(.type=="assistant") |
+  .message.content[]? |
+  select(.type=="tool_use") | .name' \
+  "$SESSION" | sort | uniq -c | sort -rn
+```
+
+## Чувствительные шаблоны для мониторинга
+
+Эти закономерности стоит автоматически обнаруживать при аудите:
+
+| Шаблон | Риск | jq-фильтр |
+|---------|------|-----------|
+| Читайте `.env`, `*.pem`, `id_rsa` | Доступ к учетным данным | `test("\\.(env|pem|key)$")` |
+| Bash с помощью `rm -rf` или `--force-push` | Разрушительное действие | `test("rm -rf")` |
+| WebFetch на внешний URL-адрес | Потенциальная эксфильтрация | выберите `.name=="WebFetch"` |
+| Запись вне каталога проекта | Ползучесть масштаба | Сравнить путь к текущему каталогу |
+
+Для команд экспортируйте проверенные журналы в хранилище с контролируемым доступом и явной политикой хранения. Управление версиями S3 само по себе не делает журналы неизменяемыми; для этого требуются дополнительные элементы управления, такие как настроенная блокировка объектов.
+
+## Внешние инструменты сообщества
+
+| Инструмент | Тип | Основное использование |
+|------|------|--------------|
+| **ccusage** | CLI / ТУИ | Затраты на JSONL, ссылка сообщества |
+| **claude-code-otel** | OpenTelemetry | Экспорт в Прометей + Графана |
+| **ccboard** | ТУИ + Интернет | Панель сессий, затраты, активность |
+| **Акто** | SaaS | Ограждения безопасности на уровне API |
+| **MLТрассировка потока** | CLI + SDK | Точное количество токенов, оценка LLM |
+
+```bash
+# Quick install
+npm i -g ccusage          # Costs and statistics
+cargo install ccboard     # Interactive dashboard
+# Native OpenTelemetry configuration:
+# https://code.claude.com/docs/en/monitoring-usage
+```
+
+## Дерево решений
+
+```
+Need costs quickly?        → ccusage (0 config)
+Enterprise audit?          → claude-code-otel + Grafana
+Already on MLflow?         → MLflow tracing integration
+Visual dashboard?          → ccboard
+```
+
+## Оценка стоимости в JSONL
+
+Журналы JSONL не содержат напрямую цены Anthropic. Такие инструменты, как ccusage, считывают записанные счетчики использования и применяют модельные цены для оценки затрат. Отсутствие записей, изменение цен и выставление счетов за подписку могут привести к тому, что эти оценки будут отличаться от счетов поставщика.

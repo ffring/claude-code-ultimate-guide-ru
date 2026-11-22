@@ -1,0 +1,86 @@
+---
+title: "Управление контекстом"
+subtitle: "Управление контекстным окном для эффективных сеансов"
+card-number: "M02"
+category: "Методология"
+guide-version: "3.44.1"
+wp-version: "1.0.1"
+difficulty: "beginner"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Контекстные индикаторы
+
+Осмотрите `/context` на предмет текущей мощности и крупнейших потребителей. Сжимайте, когда более ранние детали больше не нужны, и начинайте заново, когда задача меняется. Процентные пороги могут служить личным напоминанием; они не устанавливают всеобщую потерю качества рассуждения.
+
+## Источники контекста (по приоритету)
+
+```
+1. ~/.claude/CLAUDE.md       Global rules
+2. ./CLAUDE.md               Project rules (root)
+3. subfolder/CLAUDE.md       Local rules (cumulative)
+4. .claude/rules/*.md        Unscoped rules at startup; paths rules when relevant
+5. @file                     Explicit inline import (in session)
+```
+
+## Команды управления
+
+```bash
+/compact        # Summarize earlier context; reduction varies
+/clear          # Start a fresh context; saved sessions may be resumed
+/usage          # Inspect usage and plan limits
+/context        # Detailed context state
+```
+
+## Разумное добавление контекста
+
+```
+# In the prompt
+@src/auth.ts Look at this function
+
+# Via CLAUDE.md (persistent)
+Always read package.json before working on deps.
+
+# Via .claude/rules/ (auto-loaded at startup)
+Rules scoped by path (paths:) or global
+```
+
+## Стратегии по сценарию
+
+**Длинный сеанс (рефакторинг)**: создайте контрольные точки на значимых границах задачи. Сохраняйте важные решения в `CLAUDE.md`.
+
+**Комплексная отладка**: Предоставляйте только соответствующие файлы с `@file`. Не загружайте весь проект сразу.
+
+**Multi-file**: попросите Claude делегировать полномочия с помощью инструмента агента. Вместо этого `--agent` выбирает основного агента сеанса.
+
+## Что потребляет больше всего
+
+| Источник | Влияние |
+|--------|--------|
+| Большие файлы читаются полностью | Очень высокий |
+| История разговоров | Высокий |
+| Подробный вывод команды | Высокий |
+| Слишком длинный CLAUDE.md | Середина |
+| Длинные ответы Claude | Середина |
+
+## Оптимизация CLAUDE.md
+
+```markdown
+# Good: short and actionable rules
+- Always use TypeScript strict mode
+- Prefer pnpm over npm
+
+# Bad: long narrative context
+We have been working on this project since 2023
+and the team decided after many debates to...
+```
+
+## Распространенные антипаттерны
+
+Не вставляйте в командную строку большие JSON или необработанные журналы. Вместо этого используйте временный файл и `@file`. Не игнорируйте контекстные предупреждения: проверяйте, что занимает контекст, и сохраняйте решения перед сжатием.

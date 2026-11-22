@@ -1,0 +1,75 @@
+---
+title: "Многомашинная конфигурация и резервное копирование"
+subtitle: "Синхронизация конфигурации Claude Code на нескольких машинах"
+card-number: "T10"
+category: "Технический"
+difficulty: "intermediate"
+guide-version: "3.44.1"
+wp-version: "1.0.1"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Что остается локальным и чем можно поделиться
+
+| Только местное | Общий доступ |
+|------------|-----------|
+| `settings.local.json` | `agents/`, `skills/` |
+| API ключи, жетоны | `hooks/`, `rules/` |
+| История сеансов | `settings.template.json` |
+| `.env` с секретами | CLAUDE.md (командные соглашения) |
+
+**Золотое правило**: никогда не передавайте ключи или учетные данные API. Используйте файлы шаблонов с заполнителями `${VAR_NAME}` для конфиденциальных значений.
+
+## Файлы конфигурации проверенной версии
+
+Храните актуальные файлы в репозитории конфигурации. Символическая ссылка из репозитория на `~/.claude` сохраняет в Git только цель ссылки, а не содержимое ссылки.
+
+```bash
+# Create a new private configuration repository
+mkdir ~/claude-config-backup
+cd ~/claude-config-backup
+git init
+# Copy only directories that exist and have been reviewed
+cp -R ~/.claude/agents ./agents
+cp -R ~/.claude/skills ./skills
+cp -R ~/.claude/hooks ./hooks
+# Inspect copies for secrets and machine-specific paths before staging
+git add agents skills hooks
+git diff --cached
+# Commit and push only after reviewing the staged content
+```
+
+Создайте очищенный шаблон настроек отдельно. На другом компьютере клонируйте репозиторий и сравните файлы с текущей конфигурацией, прежде чем копировать их на место. Создайте резервную копию существующих файлов и проверьте перехватчики, прежде чем включать их.
+
+## `settings.local.json` для специфичных для машины корректировок
+
+Каждая машина может иметь свои собственные настройки, не затрагивая общую конфигурацию. Этот файл имеет приоритет над `settings.json` и никогда не фиксируется.
+
+```json
+{
+  "permissions": {
+    "allow": ["Bash(brew *)", "Bash(docker *)"]
+  },
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://localhost:8080"
+  }
+}
+```
+
+## Область резервного копирования в облаке
+
+Создавайте резервные копии проверенных шаблонов конфигурации, а не всего каталога `~/.claude`, который также содержит расшифровки и, возможно, учетные данные. Выберите настройки доступа и хранения для фактических данных.
+
+## Автоматическое резервное копирование с помощью cron
+
+Сначала создайте каталог резервной копии и защитите его соответствующим образом. Эта запись cron архивирует проверенный репозиторий; cron требует, чтобы знак процента в `date` был экранирован.
+
+```cron
+0 2 * * * tar -czf "$HOME/claude-backups/config-$(date +\%F).tar.gz" -C "$HOME" claude-config-backup
+```

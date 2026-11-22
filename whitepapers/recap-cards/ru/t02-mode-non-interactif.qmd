@@ -1,0 +1,90 @@
+---
+title: "Неинтерактивный и безголовый режим"
+subtitle: "Использование Claude Code без участия человека: скрипты, CI, каналы"
+card-number: "T02"
+category: "Технический"
+difficulty: "intermediate"
+guide-version: "3.44.1"
+wp-version: "1.0.1"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Базовый флаг: `-p`.
+
+Флаг `-p` (или `--print`) активирует неинтерактивный режим. Claude возвращает ответ в терминал и немедленно завершает работу, не дожидаясь ввода пользователя.
+
+```bash
+# Direct prompt
+claude -p "Analyze this file and list the bugs"
+
+# With pipe stdin (content becomes the input)
+git diff | claude -p "Explain these changes"
+cat error.log | claude -p "Identify the root cause"
+```
+
+## Выходные форматы
+
+`--output-format` управляет структурой ответа, необходимой для интеграции в скрипты.
+
+| Формат | Использование |
+|--------|-------|
+| `text` | Человекочитаемый, по умолчанию |
+| `json` | Разбирается `jq` |
+| `stream-json` | Потоковая передача в реальном времени |
+
+```bash
+# JSON output for automatic parsing
+git status --short | claude -p "Categorize the changes" \
+  --output-format json | jq -r '.result'
+
+# Stream JSON for long operations
+cat report.txt | claude -p "Summarize" --output-format stream-json --verbose
+```
+
+## Контроль потока в трубах
+
+В режиме печати `claude -p` ожидает полного ответа и записывает его на стандартный вывод одним блоком, что упрощает конвейеры с помощью инструментов, ожидающих полного ввода. Потоковая передача в реальном времени доступна через `--output-format stream-json`.
+
+```bash
+claude -p "Generate a report" > report.md
+```
+
+## Использование CI/CD
+
+В изолированном контейнере `--dangerously-skip-permissions` подавляет все запросы подтверждения. Зарезервируйте исключительно для изолированных сред, где Claude не может получить доступ к конфиденциальным ресурсам.
+
+```bash
+# GitHub Actions (isolated container)
+claude -p "Run the tests and fix failures" \
+  --dangerously-skip-permissions \
+  --output-format json
+```
+
+## Общие шаблоны
+
+```bash
+# Automated log analysis
+tail -n 200 app.log | claude -p "Critical alerts only" \
+  --output-format json
+
+# PR review (package.json integration)
+git diff main...HEAD | claude -p "Security review, JSON format" \
+  --output-format json > review.json
+```
+
+## Интерактивный против неинтерактивного
+
+| Аспект | Интерактивный | Неинтерактивный (`-p`) |
+|--------|-------------|------------------------|
+| Выход | Потоковой интерфейс | Необработанный стандартный вывод |
+| Разрешения | Подсказки или сохраненные правила | Настройка разрешающих правил или режима ограниченных разрешений |
+| Использование | Разработка | CI, скрипты, каналы |
+| Сессия | Настойчивый | Сохранено по умолчанию; можно продолжить или возобновить |
+
+**Лучшая практика**: ограничьте размер канала, чтобы не выходить за пределы контекстного окна. Фильтруйте с помощью `head`, `grep` или `--name-only` перед отправкой в ​​Claude.

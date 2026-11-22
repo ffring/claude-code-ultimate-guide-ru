@@ -1,0 +1,125 @@
+---
+title: "Хуки: бетонные узоры"
+subtitle: "Практические примеры хуков для автоматизации рабочего процесса"
+card-number: "M12"
+category: "Методология"
+difficulty: "intermediate"
+guide-version: "3.44.1"
+wp-version: "1.0.2"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Автоформат после редактирования
+
+`PostToolUse`, сопоставитель `Edit|Write`: формат по расширению.
+
+```bash
+INPUT=$(cat)
+FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path')
+EXT="${FILE##*.}"
+case "$EXT" in
+  ts|tsx) npx prettier --write "$FILE" 2>/dev/null ;;
+  py)     black "$FILE" 2>/dev/null ;;
+  go)     gofmt -w "$FILE" 2>/dev/null ;;
+  rs)     rustfmt "$FILE" 2>/dev/null ;;
+esac
+exit 0
+```
+
+Прежде чем снова тестировать или редактировать, дождитесь форматирования, чтобы избежать одновременной записи.
+
+## macOS уведомление о завершении
+
+`Stop`: показать уведомление macOS и воспроизвести звук.
+
+```bash
+INPUT=$(cat)
+MESSAGE=$(echo "$INPUT" | jq -r '.last_assistant_message // "Done"')
+osascript - "$MESSAGE" <<'APPLESCRIPT'
+on run argv
+  display notification (item 1 of argv) with title "Claude Code"
+end run
+APPLESCRIPT
+afplay /System/Library/Sounds/Hero.aiff &
+exit 0
+```
+
+## Безопасность: блокируйте опасные команды
+
+`PreToolUse`, сопоставитель `Bash`: проверьте предложенную команду.
+
+```bash
+COMMAND=$(cat | jq -r '.tool_input.command')
+DANGEROUS=("rm -rf /" "dd if=" "DROP DATABASE"
+           "git push --force.*main")
+for pattern in "${DANGEROUS[@]}"; do
+  if [[ "$COMMAND" =~ $pattern ]]; then
+    echo "BLOCKED: $pattern" >&2
+    exit 2
+  fi
+done
+exit 0
+```
+
+Выход 2 блокирует это действие. Эти иллюстративные шаблоны можно обойти; сохранить разрешения и изоляцию.
+
+## Автоматическая обработка Git после редактирования
+
+`PostToolUse`, совпадение `Edit|Write`. Согласованная постановка; просмотрите индекс перед фиксацией.
+
+```bash
+INPUT=$(cat)
+FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
+[[ -z "$FILE" || "$FILE" == "null" ]] && exit 0
+git add -- "$FILE" 2>/dev/null
+exit 0
+```
+
+## Автоматическая оболочка RTK
+
+Для `PreToolUse` на `Bash` предложите эквивалент RTK через JSON `hookSpecificOutput.additionalContext`. Обычный стандартный вывод не является надежной инструкцией модели. Прежде чем переписывать команду, проверьте поддержку оболочки.
+
+## Записывать все выполненные команды
+
+`PostToolUse`, сопоставитель `Bash`: в этом примере создается собственный каталог журналов.
+
+```bash
+COMMAND=$(cat | jq -r '.tool_input.command // empty')
+mkdir -p ~/.claude/logs
+printf '%s | %s\n' "$(date -u +%FT%T)" "$COMMAND" \
+  >> ~/.claude/logs/commands.log
+exit 0
+```
+
+## Шаблон диспетчера: единая точка входа
+
+Используйте одно сопоставление `Edit|Write|Bash` и направьте его по имени инструмента к `.claude/hooks/handlers/`. Сохраните решение каждого обработчика и статус выхода.
+
+## Замена вывода инструмента (v2.1.121)
+
+`PostToolUse`: `hookSpecificOutput.updatedToolOutput` заменяет результат, переданный Claude. Сопоставьте реальную схему ответа.
+
+```bash
+jq 'select(.tool_name == "Bash") |
+  {hookSpecificOutput: {hookEventName: "PostToolUse",
+    updatedToolOutput: (.tool_response |
+      .stdout |= gsub("ghp_[A-Za-z0-9]+"; "[REDACTED]") |
+      .stderr |= gsub("ghp_[A-Za-z0-9]+"; "[REDACTED]"))}}'
+```
+
+Это охватывает один шаблон токена. Он не может отменить побочные эффекты или отредактировать предыдущие телеметрические данные.
+
+## Контрольный список установки
+
+```bash
+chmod +x .claude/hooks/my-hook.sh   # Required
+# Test manually before activating:
+echo '{"tool_name":"Edit","tool_input":{"file_path":"test.ts"}}' \
+  | .claude/hooks/my-hook.sh
+```

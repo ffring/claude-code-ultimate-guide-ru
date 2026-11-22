@@ -1,0 +1,92 @@
+---
+title: "Навыки, плагины и агенты"
+subtitle: "Выбор подходящего механизма расширения для задачи"
+card-number: "C04"
+category: "Дизайн"
+difficulty: "intermediate"
+guide-version: "3.44.1"
+wp-version: "1.0.1"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Сравнительная таблица
+
+| Механизм | Область применения | Призыв | Ресурсы | Вариант использования |
+|-----------|-------|-----------|-----------|----------|
+| **Skill (пользователь)** | Кодифицированный рабочий процесс | `/name` (пользователь) | Да | Повторяемая задача, запускаемая вручную |
+| **Skill (авто)** | Многоразовые знания | Авто по модели | Да | Общий опыт между агентами |
+| **Плагин** | Торговая площадка | Глобальный | Да | Сторонняя интеграция |
+| **Агент** | Автономный специалист | Инструмент агента | Через память | Комплексное делегирование |
+
+> **CC 2.1.3**: Пользовательские команды и навыки имеют общее поведение при вызове. Существующие файлы `.claude/commands/*.md` продолжают поддерживаться. Добавьте `disable-model-invocation: true` для навыков, активируемых только пользователем.
+
+## Навыки, вызываемые пользователем (ранее «Команды»)
+
+Начиная с CC 2.1.3, рабочие процессы, запускаемые вручную, живут в `.claude/skills/` с помощью `disable-model-invocation: true`.
+
+```yaml
+# .claude/skills/release/SKILL.md
+---
+name: release
+description: Prepare a release (bump version, CHANGELOG, tag)
+allowed-tools: [Read, Write, Bash]
+disable-model-invocation: true
+---
+1. Read current version from package.json
+2. Bump according to semver (patch/minor/major)
+3. Update CHANGELOG.md
+4. Create git tag
+```
+
+**Когда выбирать:** У вас есть последовательность инструкций, которые вы намеренно запускаете несколько раз в неделю.
+
+## Навыки, вызываемые моделью
+
+Навык без `disable-model-invocation` может быть задействован моделью, если его описание соответствует задаче.
+
+```yaml
+# .claude/skills/security-guardian/SKILL.md
+---
+name: security-guardian
+description: OWASP security review -- use when reviewing auth, routes, or user input
+allowed-tools: [Read, Grep, Glob]
+---
+Analyze code for OWASP Top 10 vulnerabilities...
+```
+
+**Когда выбирать:** Нескольким агентам нужны одни и те же специальные знания, или вы хотите, чтобы Claude автоматически загружал нужные знания.
+
+## Плагины: сторонние интеграции
+
+Плагины поступают из магазина и добавляют внешние возможности. Добавьте каталог с помощью `/plugin marketplace add <source>`, затем установите выбранный плагин с помощью `/plugin install <name>@<marketplace>`.
+
+**Когда выбирать:** Существующая сторонняя интеграция точно соответствует вашим потребностям.
+
+`${CLAUDE_PLUGIN_DATA}` (v2.1.78+): постоянный каталог для хранения состояния между сеансами.
+
+## Агенты: делегирование сложных задач
+
+Агент — это специализированный Claude со своими инструментами и возможностями. Он изолирует контекст, а не имитирует человеческую роль.
+
+```yaml
+# .claude/agents/security-audit.md
+---
+name: security-audit
+description: Review authentication and input handling for security defects
+model: opus
+tools: Read, Grep, Glob
+---
+Analyze code for OWASP vulnerabilities...
+```
+
+**Когда выбирать:** Длинная задача, которая может загрязнить основной контекст или распараллеливаемую работу.
+
+## Правило быстрого принятия решения
+
+Рабочий процесс, запускаемый вручную = **Skill**, вызываемый пользователем. Знания для обмена между агентами = **, вызываемый моделью Skill**. Сторонняя интеграция = **Plugin**. Задача для делегирования с изолированным контекстом = **Agent**.

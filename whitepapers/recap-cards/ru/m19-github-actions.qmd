@@ -1,0 +1,115 @@
+---
+title: "GitHub Actions + Claude Code"
+subtitle: "Интеграция Claude Code в конвейеры GitHub CI/CD"
+card-number: "M19"
+category: "Методология"
+difficulty: "advanced"
+guide-version: "3.44.1"
+wp-version: "1.0.2"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Рекомендуемый шаблон: внешнее приглашение
+
+Этот шаблон отделяет логику проверки от механики рабочего процесса. Файл YAML управляет триггерами и разрешениями; файл `.github/prompts/code-review.md` содержит критерии проверки. Изменение критериев не требует вмешательства в рабочий процесс.
+
+```
+.github/
+├── workflows/
+│   └── claude-review.yml    # CI mechanics
+└── prompts/
+    └── code-review.md       # Criteria, protocols
+```
+
+Такое разделение позволяет итерировать качество проверки без риска нарушения конвейера.
+
+## Аутентификация: OAuth против ключа API
+
+| Метод | Стоимость за отзыв | Предварительные условия |
+|--------|----------------|--------------|
+| Подписка OAuth | Использует плановое пособие; применяются ограничения | Подходящая учетная запись и токен OAuth |
+| `ANTHROPIC_API_KEY` | Биллинг на основе токенов API | Anthropic API ключ |
+
+Выберите аутентификацию из учетной записи и рабочей нагрузки. Проверка подписки расходует пособие; ни один из методов не гарантирует фиксированную стоимость каждого обзора.
+
+## Аннотированный минимальный рабочий процесс
+
+```yaml
+on:
+  pull_request:
+    types: [opened, synchronize]
+  issue_comment:
+    types: [created]
+
+jobs:
+  claude-review:
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event.issue.pull_request &&
+       contains(github.event.comment.body, '/claude-review'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          trigger_phrase: /claude-review
+          prompt: Read .github/prompts/code-review.md and review the PR.
+          claude_args: >-
+            --model claude-sonnet-5-5
+            --tools "Read,Glob,Grep"
+```
+
+`fetch-depth: 0` извлекает полную историю. Текущее действие принимает `prompt` и `claude_args`; ограничение инструмента CLI делает этот пример доступным только для чтения. См. официальные данные о действиях [](https://github.com/anthropics/claude-code-action/blob/main/action.yml).
+
+## Разрешенные инструменты в CI
+
+В CI ограничьте Claude инструментами только для чтения. `Read`, `Glob` и `Grep` охватывают все потребности проверки кода. Добавление `Write` или `Bash` создает риск случайного изменения репозитория во время анализа.
+
+Инструменты GitHub MCP (`mcp__github__get_pull_request_diff`, `mcp__github__submit_pending_pull_request_review`) позволяют Claude публиковать встроенные комментарии без прямого доступа на запись в репозиторий.
+
+## Протокол борьбы с галлюцинациями
+
+Автоматизированные проверки страдают от повторяющейся проблемы: Claude придумывает номера строк или сообщает о проблемах, которые он не проверил. Протокол смягчения состоит в явном запросе в подсказке проверки перед любым утверждением.
+
+Формулировка на `code-review.md`:
+
+```markdown
+Before reporting any issue, verify it with Read or Grep.
+Never cite a line number you have not confirmed.
+Structure output: MUST FIX / SHOULD FIX / CAN SKIP.
+```
+
+Эта инструкция снижает количество ложных срабатываний, не усложняя рабочий процесс.
+
+## Триггер по требованию: `/claude-review`
+
+Триггер `issue_comment` позволяет любому члену команды инициировать проверку по требованию, набрав `/claude-review` в комментарии к PR. Полезно для сложных PR, где автоматическая проверка при открытии не имела бы достаточного контекста.
+
+Условие `github.event.issue.pull_request != null` фильтрует обычные комментарии к задачам, чтобы активировать агент только для PR.
+
+## Обработка сбоев
+
+Предоставьте резервное задание, которое публикует комментарий в случае сбоя задания Claude. Без запасного варианта PR может часами хранить молчание в случае сбоя агента без ведома команды.
+
+```yaml
+- name: Handle review failure
+  if: failure()
+  uses: actions/github-script@v7
+  with:
+    script: |
+      github.rest.issues.createComment({
+        issue_number: context.payload.pull_request.number,
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        body: '⚠️ Claude review failed — human reviewer needed.'
+      });
+```

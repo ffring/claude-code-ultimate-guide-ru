@@ -1,0 +1,83 @@
+---
+title: "CLAUDE.md Лучшие практики"
+subtitle: "Написание эффективных инструкций, которые Claude читает в каждом сеансе."
+card-number: "T07"
+category: "Технический"
+difficulty: "intermediate"
+guide-version: "3.44.1"
+wp-version: "1.0.1"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Что включить
+
+Эффективный CLAUDE.md содержит три основных блока: технический стек, команды build/test и важные соглашения. Все, что Claude может вывести из самого кода (структура папок, обнаруженная платформа, менеджер пакетов), не требует документирования.
+
+```markdown
+## Stack
+Next.js 14, TypeScript, PostgreSQL/Prisma, pnpm
+
+## Commands
+- `pnpm dev`   — start the server
+- `pnpm test`  — run tests
+- `pnpm build` — production build
+
+## Critical conventions
+- Always pnpm, never npm or yarn
+- Functional components only
+- kebab-case files (my-component.tsx)
+```
+
+## Что НЕ включать
+
+| Избегать | Причина |
+|-------|--------|
+| Длинная повествовательная документация | Размывает критические правила |
+| Исторический контекст («В 2023 году мы решили…») | Не помогает Claude действовать |
+| Ссылки на целые файлы | Вместо этого используйте `@path/file` |
+| Правила Claude уже следуют | Лишний шум, стоимость токена |
+
+## Рекомендуемый размер
+
+Делайте инструкции краткими и проверяйте их влияние на реальные задачи. Около 200 строк — это практическая отправная точка, а не продемонстрированная граница согласованности модели.
+
+**Практическое правило**: если Claude дважды допускает одну и ту же ошибку, добавьте правило. Не документируйте все заранее.
+
+## Иерархическая структура
+
+```
+~/.claude/CLAUDE.md            (global, all projects)
+/project/CLAUDE.md             (project, committed)
+/project/CLAUDE.local.md       (personal, add to .gitignore)
+```
+
+В монорепозитории Claude загружает корень CLAUDE.md, а затем объединяет CLAUDE.md из активной подпапки. Дочерние правила дополняют родительские правила, не переопределяя их.
+
+## Явный импорт с помощью @
+
+```markdown
+# In CLAUDE.md
+@docs/conventions/coding-standards.md
+@docs/conventions/architecture.md
+```
+
+Импорт в CLAUDE.md загружается с этим файлом инструкций. Правила с незаданной областью загружаются обычно; правила с загрузкой заголовка `paths`, когда соответствующие файлы актуальны. Используйте навык, когда весь рабочий процесс должен загружаться только при вызове.
+
+## Рекомендуемая модульная архитектура
+
+```
+.claude/
+├── CLAUDE.md           (index, < 100 lines)
+└── rules/
+    ├── testing.md      (coverage thresholds)
+    ├── security.md     (security invariants)
+    └── api.md          (REST conventions)
+```
+
+CLAUDE.md остается читаемым с первого взгляда. Подробные правила находятся в `.claude/rules/`; область действия инструкций, специфичных для файла, с помощью `paths`.

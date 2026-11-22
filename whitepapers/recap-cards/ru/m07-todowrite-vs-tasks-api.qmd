@@ -1,0 +1,85 @@
+---
+title: "TodoWrite против задач API"
+subtitle: "Старая и новая системы управления задачами"
+card-number: "M07"
+category: "Методология"
+difficulty: "intermediate"
+guide-version: "3.44.1"
+wp-version: "1.0.1"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+> **v2.1.233**: в Opus 4.8, Sonnet 5, Fable 5, Mythos 5 и более новых моделях TodoWrite И задачи API отключены по умолчанию. Повторно включите с помощью `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`.
+
+## Прямое сравнение
+
+| Критерий | TodoWrite (устаревший) | Задачи API (v2.1.16+) |
+|-----------|-------------------|---------------------|
+| **Постоянство** | Только сеанс | Диск (`~/.claude/tasks/`) |
+| **Multi-session** | Потерян при закрытии | Выдерживает перезапуски |
+| **Зависимости** | Ручной заказ | Родной `blockedBy` |
+| **Координация** | Один агент | Мультиагентный, широковещательный |
+| **Статусы** | в ожидании/in_progress/завершено | в ожидании/in_progress/завершено |
+| **Сводка контекста** | Проиграл на `/compact` | Неповрежден после уплотнения |
+
+## Когда оставаться на TodoWrite
+
+TodoWrite остается актуальным для простых случаев: линейный список, который формируется менее чем за десять минут, без сложных зависимостей, в одном непрерывном сеансе. Установка Tasks API представляет собой инвестицию, которая окупится только в том случае, если проект будет расширяться с течением времени.
+
+## Когда переходить на задачи API
+
+```
+Work across multiple sessions    → Tasks API required
+Dependencies between tasks       → native blockedBy
+Multi-terminal or multi-agents   → real-time broadcast
+Resume after /compact            → guaranteed persistence
+```
+
+## Включить и отключить
+
+```bash
+# Enable task tools on newer models
+CLAUDE_CODE_ENABLE_TODO_TOOLS=1 claude
+
+# Force fallback to TodoWrite (rare)
+CLAUDE_CODE_ENABLE_TODO_TOOLS=1 CLAUDE_CODE_ENABLE_TASKS=0 claude
+
+# Check current configuration
+env | grep CLAUDE_CODE_ENABLE_TASKS
+```
+
+## Перенос существующего списка TodoWrite
+
+Вот типичное преобразование плоского списка в иерархию задач API.
+
+**Before (TodoWrite):**
+```
+- [ ] Add user authentication
+- [ ] Hash passwords
+- [ ] Write tests
+```
+
+**After (Задачи API):**
+```bash
+export CLAUDE_CODE_TASK_LIST_ID="my-project-auth"
+# Then inside Claude:
+# TaskCreate parent + children with blockedBy
+```
+
+## Обновление CLAUDE.md
+
+При миграции обновите инструкции по проекту, чтобы Claude автоматически использовал правильную систему. Указание ожидаемого идентификатора списка в CLAUDE.md предотвращает его забывание между сеансами.
+
+## Примечание о будущем TodoWrite
+
+TodoWrite продолжит работать, но Anthropic явно ориентирован на задачи API. Новые функции мультиагентной координации созданы исключительно в Tasks API. Миграция теперь позволяет избежать принудительного рефакторинга в более крупных проектах.
+
+## Автоматическая активация
+
+Задачи API стали системой задач по умолчанию в версии 2.1.142. Начиная с версии 2.1.233, более новые модели отключают обе системы, если не установлен `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`. После согласия `CLAUDE_CODE_ENABLE_TASKS=0` выбирает устаревшую версию TodoWrite.

@@ -1,0 +1,102 @@
+---
+title: "Основные команды"
+subtitle: "Сочетания клавиш и незаменимые команды слэша"
+card-number: "T01"
+category: "Технический"
+guide-version: "3.44.1"
+wp-version: "1.0.2"
+difficulty: "beginner"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-27"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Сочетания клавиш
+
+| Ярлык | Действие |
+|----------|--------|
+| `Shift+Tab` | Режим разрешения цикла (Ручной, AcceptEdits, План, авто); сеансы запускаются автоматически, начиная с версии 2.1.283, если не переопределено |
+| `Ctrl+O` | Переключить подробный текст |
+| `Ctrl+C` | Прерывание (в режиме ожидания: очищает ввод) |
+| `Esc` | Прервите Claude или закройте диалог; `Esc Esc` открывает перемотку |
+| `↑` / `↓` | История сообщений |
+| `Tab` | Принять предложение автозаполнения |
+| `Ctrl+X Ctrl+K` | Остановить фоновые субагенты |
+| `Ctrl+Enter` / `Ctrl+X Ctrl+S` | Отправить сообщения в очереди сейчас |
+
+## Основные команды слэша
+
+```
+/help           Help and available commands
+/clear          Clear context (reset)
+/compact        Compress history
+/model          Choose model; Enter saves, s applies once
+/cost           Session cost (alias of /usage)
+/status         Status tab: version, model, account
+/context        Context usage breakdown
+```
+
+## Режимы разрешения
+
+```
+claude                    Interactive mode (default)
+claude --dangerously-skip-permissions
+                          Bypass permission prompts; requires isolation
+claude --allowedTools "Edit,Read,Bash"
+                          Pre-approve tools; --tools restricts availability
+```
+
+## Быстрый старт
+
+```bash
+# Launch Claude Code
+claude
+
+# CLAUDE.md is loaded automatically at startup
+# To add a file during the session:
+@src/auth.ts Look at this function
+
+# Non-interactive mode (scripts)
+claude -p "Analyze this file" < input.txt
+
+# Continue last session
+claude --continue
+```
+
+## Команды сеанса
+
+```
+/new            New session (alias for /clear)
+/resume         Resume a session (opens the picker)
+/branch         Branch the conversation here
+```
+
+## Контекстная навигация
+
+| Команда | Эффект |
+|---------|--------|
+| `/compact` | Подведите итоги и освободите место |
+| `/clear` | Полный сброс |
+| `@file` | Ссылка на файл в командной строке |
+
+## Пользовательские команды слэша
+
+```
+# Invoke a custom command
+/command-name [args]
+
+# Defined in:
+.claude/skills/command-name/SKILL.md
+```
+
+## Основные советы
+
+**Управление подробностями**: используйте `--verbose` при запуске или `Ctrl+O` в сеансе, чтобы просмотреть полную пошаговую расшифровку.
+
+**Multiline**: `Shift+Enter` в терминале, чтобы добавить новую строку без отправки.
+
+**Режим Vim**: `/config` → Режим редактора или `{"editorMode": "vim"}` в `~/.claude/settings.json`. Команда `/vim` была удалена в версии 2.1.92.

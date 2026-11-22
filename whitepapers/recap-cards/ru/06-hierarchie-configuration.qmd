@@ -1,0 +1,89 @@
+---
+title: "Иерархия конфигурации"
+subtitle: "Где что настраивать, от глобального до локального"
+card-number: "T05"
+category: "Технический"
+guide-version: "3.44.1"
+wp-version: "1.0.2"
+difficulty: "beginner"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Уровни конфигурации
+
+| Уровень | Файл | Область применения | Гит |
+|-------|------|-------|-----|
+| Глобальный пользователь | `~/.claude/settings.json` | Все проекты | Нет |
+| Глобальные правила | `~/.claude/CLAUDE.md` | Все проекты | Нет |
+| Общий проект | `.claude/settings.json` | Команда | Да |
+| Локальный проект | `.claude/settings.local.json` | Персональный | Нет |
+| Правила проекта | `CLAUDE.md` (коренной) | Команда | Да |
+| Подпапка | `subfolder/CLAUDE.md` | Папка | Да |
+
+## Разрешение конфликтов
+
+```
+~/.claude/CLAUDE.md          (1 - global base)
+↓ + merge
+./CLAUDE.md                  (2 - project rules)
+↓ + merge
+subfolder/CLAUDE.md          (3 - local rules)
+↓ + merge
+@explicit import             (4 - inline import)
+```
+
+Правила более низкого уровня **дополняют**, а не заменяют более высокие уровни.
+
+## settings.json: Структура
+
+```json
+{
+  "model": "claude-sonnet-5-5",
+  "permissions": {
+    "allow": ["Bash(git *)"],
+    "deny": ["Bash(rm -rf*)"]
+  },
+  "env": {
+    "DISABLE_TELEMETRY": "1"
+  }
+}
+```
+
+## CLAUDE.md: лучшие практики
+
+```markdown
+# Project Conventions
+
+## Stack
+- TypeScript strict mode
+- pnpm (not npm)
+- Tests: Vitest
+
+## Rules
+- Always check types before modifying
+- Commits in English
+- Never modify package-lock.json
+```
+
+## Что куда идет
+
+**Global CLAUDE.md**: личные предпочтения, стиль кода, универсальные соглашения.
+
+**Project CLAUDE.md**: архитектура, стек, командные соглашения, команды build/test.
+
+**Project settings.json**: разрешения инструмента, модель по умолчанию, переменные среды разработки.
+
+**settings.local.json**: персональные изменения, которые не должны влиять на команду.
+
+## Требуется .gitignore
+
+```
+# In the project .gitignore
+.claude/settings.local.json
+```

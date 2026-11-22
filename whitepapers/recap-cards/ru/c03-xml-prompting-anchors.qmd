@@ -1,0 +1,98 @@
+---
+title: "XML-подсказки и семантические привязки"
+subtitle: "Структурирование сложных подсказок для получения воспроизводимых результатов"
+card-number: "C03"
+category: "Дизайн"
+difficulty: "advanced"
+guide-version: "3.44.1"
+wp-version: "1.0.2"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Почему XML работает
+
+Claude прошел обучение на массивных корпусах, включающих XML. Когда вы структурируете приглашение с помощью тегов, вы создаете однозначные разделители, которые разделяют инструкцию, контекст, ссылочный код и ограничения. Структура может сделать эти роли более понятными, но она не гарантирует выполнение инструкций и не предотвращает быстрое внедрение.
+
+Структура XML актуальна для сложных или многократно используемых задач. Для однострочного исправления это лишний шум.
+
+## Базовая структура
+
+```xml
+<instruction>
+Extract the validation logic into a separate module
+</instruction>
+
+<context>
+Express service, Node.js 20, no external dependencies
+</context>
+
+<code_example>
+// Existing pattern to preserve
+function validateEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+</code_example>
+
+<constraints>
+- Do not modify public function signatures
+- Maintain compatibility with existing tests
+</constraints>
+
+<output>
+New file src/validation/index.ts with exports
+</output>
+```
+
+## Каталог многоразовых тегов
+
+| Ярлык | Использование |
+|-----|-------|
+| `<instruction>` | Основная задача |
+| `<context>` | Стек, состояние системы, история |
+| `<code_example>` | Справочный образец для подражания |
+| `<constraints>` | Что нельзя изменять |
+| `<output>` | Ожидаемый формат и содержание |
+| `<state>` | Текущее состояние (ошибка, разница, журналы) |
+| `<task>` + `<subtask>` | Иерархическая декомпозиция |
+
+## Семантические якоря
+
+Семантический якорь называет установленный метод или шаблон. Это дает Claude краткую ссылку, но задача по-прежнему требует контекста проекта и проверки.
+
+```text
+Refactor the payment integration using Ports & Adapters.
+Keep provider code outside the domain.
+Check that the existing payment tests still pass.
+```
+
+«Порты и адаптеры» называют подход к проектированию. Следующие два предложения говорят, что это означает для этой задачи и как проверить изменение. Если Claude неправильно применяет этот термин, укажите предполагаемую границу вместо повторения имени. См. раздел руководства [о семантических якорях](https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/guide/ultimate-guide.md#29-semantic-anchors).
+
+Комментарии к коду, такие как `// ANCHOR: auth-flow`, являются маркерами местоположения. Они могут помочь указать на область файла, но представляют собой другое использование слова «привязка».
+
+## Когда использовать XML
+
+| Случай | Использовать XML? |
+|------|----------|
+| Простой однострочный запрос | Нет |
+| Исправлена ​​ошибка в одной функции | Нет |
+| Многофайловая реализация | Да |
+| Многоразовое приглашение в команде | Да |
+| Обзор с точными критериями | Да |
+
+## Интеграция с CLAUDE.md
+
+Вы можете определить соглашения XML проекта в `CLAUDE.md`, чтобы стандартизировать командные подсказки:
+
+```markdown
+## XML Prompt Conventions
+Project tags: <api_design>, <accessibility>, <perf_budget>
+For features: always include <context> and <constraints>
+```
+
+Затем все члены команды используют один и тот же словарь тегов, что делает общие подсказки (в `.claude/skills/`) единообразными и понятными.

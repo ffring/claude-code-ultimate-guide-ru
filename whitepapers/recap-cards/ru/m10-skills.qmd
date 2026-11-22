@@ -1,0 +1,108 @@
+---
+title: "Навыки"
+subtitle: "Многоразовые модули навыков со встроенными ресурсами"
+card-number: "M10"
+category: "Методология"
+difficulty: "intermediate"
+guide-version: "3.44.1"
+wp-version: "1.0.2"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-27"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Структура навыков
+
+Навык — это папка в `.claude/skills/`, содержащая файл `SKILL.md` и, при необходимости, дополнительные ресурсы (документы, шаблоны, сценарии, контрольные списки).
+
+```
+my-skill/
+├── SKILL.md              # Instructions + frontmatter (required)
+├── reference.md          # Reference documentation
+├── checklists/
+│   └── quality.md
+└── examples/
+    └── pattern.ts
+```
+
+## Режимы вызова
+
+| Режим | Фронтматтер | Поведение |
+|------|-------------|----------|
+| **User-invocable** | `disable-model-invocation: true` | Запускается пользователем через `/name` |
+| **Только вызываемый моделью** | `user-invocable: false` | Скрыт из меню пользователя; Claude может вызвать его |
+| **Оба** | (без флага) | Вызов в любом случае |
+
+## SKILL.md фронтовая тема
+
+```yaml
+---
+name: security-guardian
+description: OWASP expertise, auth, and data protection
+allowed-tools: Read Grep Bash
+---
+```
+
+| Поле | Роль |
+|-------|------|
+| `name` | Кебаб-кебаб, 1–64 символа, должен соответствовать папке. |
+| `description` | Триггер активации; с `when_to_use`, усеченным до 1536 символов в листинге (1024 — это ограничение Agentskills.io) |
+| `allowed-tools` | Белый список инструментов (поддерживает подстановочные знаки) |
+| `disable-model-invocation` | `true` для вызова только вручную. |
+| `user-invocable` | `false` скрывает навык из меню `/`. |
+| `model` / `effort` | Модель для каждого навыка (допускается `inherit`) и усилия (от `low` до `max`) |
+| `context` / `paths` | `fork` работает в субагенте; Активация ограничения globs `paths` |
+
+## Навыки против команд
+
+| Аспект | Навык | Команда |
+|--------|-------|---------|
+| **Ресурсы** | Можно вставлять файлы | Только уценка |
+| **Объем** | Знание предметной области | Процедурный рабочий процесс |
+| **Повторное использование** | Между агентами | Прямой вызов |
+| **Стандарт** | Agentskills.io (портативный) | только Claude Code |
+
+Основное отличие: в навык можно встроить файл `reference.md` из 500 строк, который становится доступным при вызове. Команда не может.
+
+## Установка навыков сообщества
+
+```bash
+# Inspect available skills before installing
+npx skills add vercel-labs/agent-skills --list
+
+# Select the desired skills interactively
+npx skills add vercel-labs/agent-skills --agent claude-code
+
+# Check installed skills
+npx skills list
+```
+
+[skills CLI](https://github.com/vercel-labs/skills) устанавливает пакеты сообщества. Листинг или сканирование не гарантируют безопасность: перед использованием проверьте инструкции, сценарии, запрошенный доступ и выбранную версию.
+
+## Призыв
+
+Навыки запускаются как команды, по их названию:
+
+```
+/security-guardian          # Direct invocation
+/tdd                        # TDD skill
+/design-patterns detect     # With argument
+```
+
+Агенты могут предварительно загружать навыки через поле `skills:` в своем заголовке. Содержимое вводится в контекст агента при запуске.
+
+## Жизненный цикл и улучшение
+
+Две модели долгосрочного управления:
+
+**Claudeception**: мета-навык, который генерирует новые навыки в результате открытий сеанса. Установить: `git clone https://github.com/blader/Claudeception ~/.claude/skills/claudeception`
+
+**Claude Reflect System**: улучшает существующие навыки путем анализа исправлений, обнаруженных во время сессий. Предлагает изменения перед их применением.
+
+## Важное предостережение
+
+Claude может автоматически активировать подходящие навыки, но обнаружение не гарантирует вызов при каждом соответствующем запросе. Поместите важные, всегда применимые инструкции в `CLAUDE.md` или `.claude/rules/` и проверьте активацию навыков по репрезентативным подсказкам.

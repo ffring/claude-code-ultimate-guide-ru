@@ -1,0 +1,89 @@
+---
+title: "Система управления задачами"
+subtitle: "Организуйте работу Claude с Заданиями API."
+card-number: "M06"
+category: "Методология"
+difficulty: "intermediate"
+guide-version: "3.44.1"
+wp-version: "1.0.1"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+> **v2.1.233**: в Opus 4.8, Sonnet 5, Fable 5, Mythos 5 и более новых моделях задачи API (и TodoWrite) отключены по умолчанию. Повторно включите с помощью `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`.
+
+## Иерархия задач
+
+При включении Tasks API (v2.1.16+) поддерживает постоянное отслеживание статуса и зависимостей. Следующие четыре уровня представляют собой соглашение по планированию, а не обязательные типы задач.
+
+| Уровень | Роль |
+|-------|------|
+| **План** | Цель высокого уровня |
+| **Фаза** | Основная веха |
+| **Задача** | Доставка бетона |
+| **Подзадача** | Атомное действие |
+
+Задачи сохраняются после завершения сеанса, сжатия контекста и перезапуска. Они хранятся в `~/.claude/tasks/<id>/`.
+
+## Основные инструменты
+
+```
+TaskCreate   Create a task or subtask
+TaskList     List all tasks (statuses + blockages)
+TaskGet      Read full details of a task
+TaskUpdate   Update status or metadata
+TaskStop     Stop a running background execution
+```
+
+## Цикл выполнения
+
+```bash
+# 1. Opt in on newer models and use a stable list ID
+export CLAUDE_CODE_ENABLE_TODO_TOOLS=1
+export CLAUDE_CODE_TASK_LIST_ID="myproject-auth-v2"
+claude
+
+# 2. List and resume
+> "TaskList to see current state"
+
+# 3. Mark a task in progress then complete it
+> "Mark task-login as in_progress, then implement"
+> "Mark task-login as completed"
+```
+
+## Доступные статусы
+
+| Статус | Значение |
+|--------|---------|
+| `pending` | Ожидающий |
+| `in_progress` | В настоящее время выполняется |
+| `completed` | Успешно завершено |
+
+
+## Зависимости с заблокированнымBy
+
+Поле `blockedBy` предотвращает преждевременное выполнение задачи, зависящей от другой. Используемые идентификаторы должны быть фактическими идентификаторами задач, а не их названиями.
+
+```
+Create "Write integration tests", then set its dependencies
+using the actual IDs returned for the login and refresh tasks.
+```
+
+Отложенные задачи с неразрешенными зависимостями не могут быть востребованы. Зафиксировать сбои в описании или метаданных; состояния задачи — `pending`, `in_progress` и `completed`.
+
+## Когда активировать Задачи API
+
+Используйте его, когда зависимости или состояние должны пережить сеанс. Для небольшой задачи может потребоваться лишь краткий план; обе системы задач требуют согласия на более новых моделях.
+
+## Ожидаемая стоимость
+
+`TaskList` возвращает сводку; `TaskGet` извлекает сведения о выбранной задаче. Это вызовы инструментов, а не индивидуальный подсчет запросов моделей с выставленными счетами. Помещайте полезные сводки в `subject` и получайте подробные описания, когда это необходимо, чтобы ограничить ненужный контекст.
+
+## Идентификатор списка: правила именования
+
+Общий идентификатор, общий для всех проектов, приводит к коллизиям. Используйте идентификатор репозитория в форме `<org>-<repo>-<feature>`.

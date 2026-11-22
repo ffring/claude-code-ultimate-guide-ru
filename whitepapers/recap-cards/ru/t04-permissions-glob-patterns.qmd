@@ -1,0 +1,88 @@
+---
+title: "Разрешения: шаблоны Glob и белый список"
+subtitle: "Точное управление доступными инструментами с помощью шаблонов glob"
+card-number: "T04"
+category: "Технический"
+difficulty: "intermediate"
+guide-version: "3.44.1"
+wp-version: "1.0.1"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Два формата шаблонов
+
+**Простой формат**: соответствует имени инструмента или команде Bash.
+
+```json
+"permissions": {
+  "allow": ["Bash(git *)", "Bash(pnpm *)", "Read", "Edit"],
+  "deny":  ["Bash(rm -rf *)", "Bash(sudo *)", "Bash(npm publish)"]
+}
+```
+
+**Шаблоны пути**: Чтение, редактирование и запись принимают шаблон пути напрямую. Не добавляйте `file_path:`; этот квалификатор недействителен для этих инструментов.
+
+```json
+"permissions": {
+  "deny": [
+    "Read(*.env*)",
+    "Edit(*.pem)",
+    "Write(*.key)",
+    "Read(*credentials*)"
+  ]
+}
+```
+
+## Синтаксис глобальных объектов
+
+| Шаблон | Что соответствует |
+|---------|--------------|
+| `Bash(git *)` | Любая команда git |
+| `Bash(npm test*)` | `npm test`, `npm test:watch` |
+| `Read(*.env*)` | `.env`, `.env.local`, `.env.prod` |
+| `Edit(./src/**)` | Все файлы под `src/` |
+| `Write(*.key)` | Любой файл `.key` |
+
+## Прогрессивные уровни
+
+```json
+// Level 1 - Auto-approve read tools
+{ "permissions": { "allow": ["Read", "Grep", "Glob"] } }
+
+// Level 2 - Git + package manager
+{ "permissions": { "allow": ["Read", "Grep", "Glob",
+    "Bash(git *)", "Bash(pnpm *)"] } }
+
+// Level 3 - Full development
+{ "permissions": { "allow": ["Read", "Grep", "Glob",
+    "Edit", "Write", "Bash(git *)", "Bash(pnpm *)"] } }
+```
+
+## Поведение трех категорий
+
+| Категория | Поведение |
+|----------|----------|
+| `allow` | Одобрено автоматически, без подсказок |
+| `deny` | Полностью заблокирован |
+| `ask` | Запрошено подтверждение |
+| (по умолчанию) | Режим разрешений по умолчанию |
+
+## Известное ограничение
+
+Правило пути ограничивает доступ к инструменту сопоставления; он не может удалить секрет, уже вставленный в приглашение или возвращенный другим инструментом. Храните конфиденциальные данные за пределами доступа к процессу и одновременно проверяйте оболочку, MCP и элементы управления песочницы.
+
+## Где определить разрешения
+
+```
+~/.claude/settings.json       (global, all projects)
+.claude/settings.json         (project, shared with team)
+.claude/settings.local.json   (local machine, gitignore)
+```
+
+**Rule Assessment**: правила запрета из любой области имеют приоритет над правилами запроса и разрешения. Локальное разрешение не может переопределить запрет на управляемом или пользовательском уровне. Используйте локальные настройки для предпочтений конкретного проекта в этих пределах.

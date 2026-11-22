@@ -1,0 +1,99 @@
+---
+title: "Рабочие процессы TDD/BDD/SDD"
+subtitle: "Структурированные методологии разработки с Claude Code"
+card-number: "M15"
+category: "Методология"
+difficulty: "intermediate"
+guide-version: "3.44.1"
+wp-version: "1.0.1"
+author: "Florian BRUNIAUX"
+version: "3.44.1"
+date: "2026-10-06"
+layout: "two-col"
+lang: ru
+format:
+  recap-card-typst: default
+---
+
+## Сравнение трех подходов
+
+| Аспект | TDD | BDD | SDD |
+|--------|-----|-----|-----|
+| **Начальная точка** | Технический тест | Деловое поведение | Письменная спецификация |
+| **Язык** | Тестовый код | Given/When/Then | Структурированный документ |
+| **Аудитория** | Разработчики | Разработчики + бизнес | Вся команда |
+| **Обратная связь** | Тесты pass/fail | Проверенные сценарии | Спецификация реализована |
+
+## TDD с Claude: красно-зеленый рефакторинг
+
+Классический цикл, явно выраженный в подсказках, не позволяет Claude сразу перейти к реализации.
+
+```bash
+# RED phase: ask for the failing test first
+> "Write a FAILING test for isValidEmail().
+   The function does not exist yet."
+
+# GREEN phase: minimal implementation
+> "Write the minimal code to make this test pass."
+
+# REFACTOR phase: improvement
+> "Improve the implementation. Tests must
+   stay green."
+```
+
+Важно четко указать «FAILING» и «еще не существует». В противном случае Claude имеет тенденцию писать тест и реализацию вместе.
+
+## BDD с Claude: Given/when/then
+
+```bash
+> "Describe the behavior of the login page
+   as Gherkin scenarios, then implement."
+
+# Claude generates:
+# Scenario: Login with valid credentials
+#   Given a registered user with email test@ex.com
+#   When they submit the form with the correct password
+#   Then they are redirected to their dashboard
+```
+
+Сценарии одновременно служат спецификациями, документацией и тестовой базой на языке, понятном неразработчикам.
+
+## SDD с Claude: сначала спецификация
+
+Напишите полную спецификацию перед первой строкой кода. Затем Claude использует эту спецификацию в качестве справочного материала при реализации.
+
+```bash
+> "Here is the spec for POST /auth/login endpoint
+   [paste the spec]. Implement section by section
+   respecting every constraint."
+```
+
+## Циклы проверки: основополагающий принцип
+
+Все три метода основаны на одном и том же принципе, указанном Борисом Черным: агент **an, который может «видеть» то, что он создал, дает лучшие результаты.** Без механизма проверки Claude выполняет итерации вслепую.
+
+| Домен | Инструмент проверки |
+|--------|-------------------|
+| Бэкэнд | Тесты (юнит, интеграция) |
+| Внешний интерфейс | Предварительный просмотр в браузере |
+| Типы | TypeScript-компилятор |
+| Стиль | ESLint/Prettier |
+| Безопасность | Semgrep, статические анализаторы |
+
+## Chain-of-verification
+
+Шаблон перекрестной проверки (arXiv:2309.11495) для уменьшения галлюцинаций: Claude генерирует ответ, затем генерирует проверочные вопросы об этом ответе, а затем отвечает на эти вопросы для обнаружения несоответствий.
+
+Применимо, когда корректность результатов имеет решающее значение, а автоматизированных тестов недостаточно (сложные алгоритмы, тонкая бизнес-логика).
+
+## Интеграция с задачами API
+
+Включите инструменты задач с помощью `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`, затем спросите Claude:
+
+```text
+Create tasks for failing auth tests, implementation, and refactoring.
+Use the IDs returned by TaskCreate to add dependencies with TaskUpdate:
+implementation waits for tests; refactoring waits for implementation.
+```
+
+Цикл «Красный-Зеленый-Рефакторинг» становится отслеживаемым и постоянным на протяжении всех сеансов.
